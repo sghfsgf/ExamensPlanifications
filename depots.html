@@ -10,11 +10,11 @@
 
     /* Barre de navigation */
     nav { background-color:#5F9EA0; padding:10px 20px; display:flex; gap:15px; }
-    nav a { color:white; text-decoration:none; font-weight:bold;  font-size:26px;         /* 🔵 taille augmentée ici */}
+    nav a { color:white; text-decoration:none; font-weight:bold; font-size:26px; }
     nav a:hover { text-decoration:underline; }
 
-    /* Contenu principal aligné à gauche */
-    main { padding:20px; max-width:800px; margin:20px; }
+    /* Contenu principal aligné au centre */
+    main { padding:20px; max-width:800px; margin:20px auto; }
 
     form { background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1);}
     label { display:block; margin-top:10px; font-weight:bold; text-align:left; }
@@ -72,8 +72,8 @@
     const form = document.getElementById('depotForm');
     const messageDiv = document.getElementById('message');
 
-    // Mets ici l'URL publique /exec de ton Apps Script SGH_Depots
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXxrwO2DwmiGA5iaqfCVHqW93T1_AE0Q5oN_X2iZn8JXRooKAtEkPc3Vn7qTFz7Q/exec";
+    // URL publique /exec de ton Apps Script SGH_Depots
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyHkxwoqn7XPxC1b6DzwBsrH9tv-OdqKQiDSf4dRB49L72gi8T2TLQlZa13xMbq31sy/exec";
 
     // Départements pré-remplis
     const departements = ["SV","ST","INFO","CH","PHYS","FT","Maths","LANGUES"];
@@ -86,42 +86,71 @@
       select.appendChild(option);
     });
 
-    // Gestion du formulaire
+    // Gestion du formulaire avec base64 pour Apps Script
     form.addEventListener('submit', e => {
       e.preventDefault();
       messageDiv.textContent = "Envoi en cours...";
       messageDiv.style.color = "black";
 
-      const formData = new FormData(form);
+      const nomPrenom = form.nomPrenom.value.trim();
+      const email = form.email.value.trim();
+      const departement = form.departement.value;
+      const fileInput = form.fichier.files[0];
 
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.status === "success"){
-          messageDiv.textContent = data.message;
-          messageDiv.style.color = "green";
-          form.reset();
-        } else {
-          messageDiv.textContent = data.message;
+      if(!fileInput) {
+        messageDiv.textContent = "Veuillez choisir un fichier !";
+        messageDiv.style.color = "red";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function() {
+        const base64File = reader.result.split(',')[1];
+
+        const payload = {
+          nomPrenom: nomPrenom,
+          email: email,
+          departement: departement,
+          fileName: fileInput.name,
+          mimeType: fileInput.type,
+          file: base64File
+        };
+
+        try {
+          const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+
+          const data = await response.json();
+          if(data.status === "success"){
+            messageDiv.textContent = "Fichier envoyé avec succès ! ✅";
+            messageDiv.style.color = "green";
+            form.reset();
+          } else {
+            messageDiv.textContent = "Erreur : " + data.message;
+            messageDiv.style.color = "red";
+          }
+
+        } catch(err) {
+          console.error(err);
+          messageDiv.textContent = "Erreur serveur, réessaye plus tard.";
           messageDiv.style.color = "red";
         }
-      })
-      .catch(err => {
-        console.error(err);
-        messageDiv.textContent = "Erreur serveur, réessaye plus tard.";
-        messageDiv.style.color = "red";
-      });
+      };
+
+      reader.readAsDataURL(fileInput);
     });
   </script>
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js')
-    .then(() => console.log('Service Worker enregistré !'))
-    .catch(err => console.log('Erreur Service Worker :', err));
-}
-</script>
+
+  <script>
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker enregistré !'))
+        .catch(err => console.log('Erreur Service Worker :', err));
+    }
+  </script>
+
 </body>
 </html>
