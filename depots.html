@@ -91,7 +91,7 @@ form.addEventListener('submit', e => {
   formData.append('departement', document.getElementById('departement').value);
   formData.append('fichier', document.getElementById('fichier').files[0]);
 
-  fetch('https://script.google.com/macros/s/AKfycbx6ONebwPcqjRtgtq-mpp_kfNQ5GznS5KddOTE0tc93-eU472tJU2HB5IAXKmYksBPH/exec', {  // Remplace par l'URL de ton Apps Script
+  fetch('https://script.google.com/macros/s/AKfycbwNG2U8ryGlXRfOn6bMhlf5HOm1tIl6lSJtzDkXumpW01EjzcOebCYjP1ZBiy_pK4wW/exec', {  // Remplace par l'URL de ton Apps Script
     method: 'POST',
     body: formData
   })
