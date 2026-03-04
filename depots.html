@@ -91,7 +91,7 @@ form.addEventListener('submit', e => {
   formData.append('departement', document.getElementById('departement').value);
   formData.append('fichier', document.getElementById('fichier').files[0]);
 
-  fetch('TON_URL_APPS_SCRIPT', {  // Remplace par l'URL de ton Apps Script
+  fetch('https://script.google.com/macros/library/d/1w53IkA46g8-T8vs11nBrvrH7oWZnh-Vyju2QfGFLVCjf_VYLvsB00XAe/2', {  // Remplace par l'URL de ton Apps Script
     method: 'POST',
     body: formData
   })
