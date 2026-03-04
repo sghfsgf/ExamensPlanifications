@@ -109,14 +109,20 @@ form.addEventListener('submit', e => {
     .then(data => {
       messageDiv.style.color = (data.status === 'success') ? 'green' : 'red';
       messageDiv.textContent = data.message;
+
+      // ⚡ Faire disparaître le message après 3 secondes
+      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+
       if(data.status === 'success') form.reset();
     })
     .catch(err => {
       messageDiv.style.color = 'red';
       messageDiv.textContent = 'Erreur réseau ou serveur.';
+
+      // ⚡ Faire disparaître le message après 3 secondes même en cas d'erreur
+      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
     });
 });
-</script>
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
