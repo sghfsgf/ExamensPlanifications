@@ -40,10 +40,7 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 
   <label>Département</label>
   <select id="departement" required>
-    <option value="">--Choisir--</option>
-    <option value="SV">SV</option>
-    <option value="ST">ST</option>
-    <option value="INFO">INFO</option>
+    <option value="">--Chargement--</option>
   </select>
 
   <label>Fichier à déposer (PDF, Excel, Word)</label>
@@ -60,7 +57,29 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 
 <script>
 const form = document.getElementById('formDepot');
-form.addEventListener('submit', e=>{
+const selectDep = document.getElementById('departement');
+
+// Charger dynamiquement les départements depuis Apps Script
+window.addEventListener('DOMContentLoaded', () => {
+  fetch('TON_URL_APPS_SCRIPT')  // Remplace par l'URL de ton Apps Script
+    .then(res => res.json())
+    .then(data => {
+      selectDep.innerHTML = '<option value="">--Choisir--</option>';
+      data.departements.forEach(dep => {
+        const option = document.createElement('option');
+        option.value = dep;
+        option.textContent = dep;
+        selectDep.appendChild(option);
+      });
+    })
+    .catch(err => {
+      console.error('Erreur chargement départements :', err);
+      selectDep.innerHTML = '<option value="">Erreur chargement départements</option>';
+    });
+});
+
+// Gestion de l'envoi du formulaire
+form.addEventListener('submit', e => {
   e.preventDefault();
   const messageDiv = document.getElementById('message');
   messageDiv.style.color = 'black';
@@ -72,8 +91,7 @@ form.addEventListener('submit', e=>{
   formData.append('departement', document.getElementById('departement').value);
   formData.append('fichier', document.getElementById('fichier').files[0]);
 
-  // Remplace par ton URL de déploiement Apps Script
-  fetch('https://script.google.com/macros/library/d/1w53IkA46g8-T8vs11nBrvrH7oWZnh-Vyju2QfGFLVCjf_VYLvsB00XAe/2', { 
+  fetch('TON_URL_APPS_SCRIPT', {  // Remplace par l'URL de ton Apps Script
     method: 'POST',
     body: formData
   })
@@ -83,6 +101,7 @@ form.addEventListener('submit', e=>{
       messageDiv.style.color='green';
       messageDiv.textContent = data.message;
       form.reset();
+      selectDep.selectedIndex = 0; // remettre le select au choix vide
     } else {
       messageDiv.style.color='red';
       messageDiv.textContent = data.message;
