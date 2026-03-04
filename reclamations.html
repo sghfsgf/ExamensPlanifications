@@ -124,8 +124,8 @@
         <option value="Autre">Autre</option>
       </select>
 
-      <label>Message</label>
-      <textarea name="message" rows="5" required></textarea>
+      <label>Message (facultatif)</label>
+      <textarea name="message" rows="5"></textarea>
 
       <button type="submit">Envoyer</button>
     </form>
@@ -142,7 +142,7 @@
   <script>
     const form = document.getElementById('reclamationForm');
     const messageDiv = document.getElementById('message');
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzQVTWBoRjjmNksrNQrAxB-d2k0xU9UOfjFhrtK_HIKOad9Nt63L6DPbnfB9fuKaM_SXQ/exec"; // <-- remplacer par le lien Apps Script
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwOixmjkZYGU7YcrSz2F1_BJ6BltRH5l20i4-jD5dvHGfuVdTcpqLnBE0-EbSE641ECcg/exec"; // <-- remplacer par le lien Apps Script
 
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -161,6 +161,7 @@
           messageDiv.textContent = data.message;
           messageDiv.style.color = "green";
           form.reset();
+          setTimeout(() => { messageDiv.textContent = ""; }, 3000); // message disparaît après 3s
         } else {
           messageDiv.textContent = data.message;
           messageDiv.style.color = "red";
