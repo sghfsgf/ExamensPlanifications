@@ -6,25 +6,42 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0;
       background: #f7f7f7;
     }
-    h1 {
-      color: #333;
+    /* Barre de navigation */
+    nav {
+      background-color: #7da1c1; /* gris bleuté */
+      padding: 10px 20px;
+      display: flex;
+      gap: 15px;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    /* Contenu */
+    main {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
     }
     form {
       background: #fff;
       padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      max-width: 500px;
     }
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
-    input, select, textarea {
+    input, select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -47,39 +64,64 @@
       margin-top: 15px;
       font-weight: bold;
     }
+    /* Footer */
+    footer {
+      margin-top: 40px;
+      background-color: #ff8000; /* orangé vif */
+      color: white;
+      text-align: center;
+      padding: 15px;
+    }
   </style>
 </head>
 <body>
-  <h1>Dépôt de fichiers</h1>
-  <form id="depotForm">
-    <input type="hidden" name="formType" value="depot">
 
-    <label>Nom et Prénom</label>
-    <input type="text" name="nomPrenom" required>
+  <!-- Barre de navigation -->
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="examens.html">Examens</a>
+    <a href="surveillances.html">Surveillances</a>
+    <a href="depots.html">Dépôts</a>
+    <a href="reclamations.html">Réclamations</a>
+  </nav>
 
-    <label>Email</label>
-    <input type="email" name="email" required>
+  <main>
+    <h1>Dépôt de fichiers</h1>
+    <form id="depotForm" enctype="multipart/form-data">
+      <input type="hidden" name="formType" value="depot">
 
-    <label>Département</label>
-    <select name="departement" id="departement" required>
-      <option value="">--Chargement--</option>
-    </select>
+      <label>Nom et Prénom</label>
+      <input type="text" name="nomPrenom" required>
 
-    <label>Fichier</label>
-    <input type="file" name="fichier" required>
+      <label>Email</label>
+      <input type="email" name="email" required>
 
-    <button type="submit">Envoyer</button>
-  </form>
+      <label>Département</label>
+      <select name="departement" id="departement" required>
+        <option value="">--Chargement--</option>
+      </select>
 
-  <div id="message"></div>
+      <label>Fichier</label>
+      <input type="file" name="fichier" required>
+
+      <button type="submit">Envoyer</button>
+    </form>
+
+    <div id="message"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    &copy; 2026 SGH pour Planification et Programmation
+  </footer>
 
   <script>
     const form = document.getElementById('depotForm');
     const messageDiv = document.getElementById('message');
 
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw867roTSIYFUzePWuTdVEr6jvgcHF6KDIyIa045HmKRKk70kuciA51pEpthnnQdc91/exec"; // <-- mets ici ton URL /exec publique
+    const APPS_SCRIPT_URL = "TON_URL_DE_DEPLOIEMENT"; // <-- mets ici ton URL /exec publique
 
-    // Charger les départements dynamiquement
+    // Charger dynamiquement les départements
     fetch(APPS_SCRIPT_URL)
       .then(res => res.json())
       .then(data => {
@@ -128,5 +170,6 @@
       });
     });
   </script>
+
 </body>
 </html>
