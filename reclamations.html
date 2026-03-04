@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Réclamations - SGH Planification</title>
+  <style>
+    /* Style général */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    /* Barre de navigation */
+    nav {
+      background-color: #7aa1c4; /* gris bleuté */
+      padding: 10px 20px;
+    }
+    nav a {
+      color: white;
+      margin-right: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+
+    /* Contenu */
+    .container {
+      max-width: 800px;
+      margin: 20px;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      text-align: left; /* alignement à gauche */
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input[type="text"], input[type="email"], select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background-color: #7aa1c4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #5d83a8;
+    }
+
+    #message {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #ff7f00; /* orangé vif */
+      color: white;
+      text-align: center;
+      padding: 10px;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barre de navigation -->
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="examens.html">Examens</a>
+    <a href="surveillances.html">Surveillances</a>
+    <a href="depots.html">Dépôts</a>
+    <a href="reclamations.html">Réclamations</a>
+  </nav>
+
+  <!-- Contenu principal -->
+  <div class="container">
+    <h2>Formulaire de Réclamation</h2>
+    <form id="reclamationForm">
+      <label>Nom et Prénom</label>
+      <input type="text" name="nomPrenom" required>
+
+      <label>Email</label>
+      <input type="email" name="email" required>
+
+      <label>Département</label>
+      <select name="departement" required>
+        <option value="">--Choisir--</option>
+        <option value="SV">SV</option>
+        <option value="ST">ST</option>
+        <option value="INFO">INFO</option>
+        <option value="CH">CH</option>
+        <option value="PHYS">PHYS</option>
+        <option value="FT">FT</option>
+        <option value="Maths">Maths</option>
+        <option value="LANGUES">LANGUES</option>
+      </select>
+
+      <label>Type de réclamation</label>
+      <select name="typeReclamation" required>
+        <option value="">--Choisir--</option>
+        <option value="Absence">Absence</option>
+        <option value="Problème matériel">Problème matériel</option>
+        <option value="Planning incorrect">Planning incorrect</option>
+        <option value="Autre">Autre</option>
+      </select>
+
+      <label>Message</label>
+      <textarea name="message" rows="5" required></textarea>
+
+      <button type="submit">Envoyer</button>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    © 2026 SGH pour Planification et Programmation
+  </footer>
+
+  <!-- Script pour envoyer les données -->
+  <script>
+    const form = document.getElementById('reclamationForm');
+    const messageDiv = document.getElementById('message');
+    const APPS_SCRIPT_URL = "TON_URL_EXEC"; // <-- remplacer par le lien Apps Script
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      messageDiv.textContent = "Envoi en cours...";
+      messageDiv.style.color = "black";
+
+      const formData = new FormData(form);
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.status === "success"){
+          messageDiv.textContent = data.message;
+          messageDiv.style.color = "green";
+          form.reset();
+        } else {
+          messageDiv.textContent = data.message;
+          messageDiv.style.color = "red";
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        messageDiv.textContent = "Erreur serveur, réessaye plus tard.";
+        messageDiv.style.color = "red";
+      });
+    });
+  </script>
+</body>
+</html>
