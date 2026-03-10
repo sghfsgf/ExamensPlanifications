@@ -11,8 +11,11 @@
     nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
     nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
+
+    /* Titres uniformes */
     h1, .titre-progression, .titre-tableau { font-size:26px; font-weight:bold; margin-bottom:15px; }
-    
+
+    /* Formulaire */
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
     input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
     button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
@@ -23,9 +26,13 @@
     #progressContainer { width:100%; background:#ddd; margin-top:10px; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
 
+    /* Tableau */
     table { width:100%; border-collapse: collapse; margin-top:10px; }
-    table, th, td { border:1px solid #888; }
-    th, td { padding:8px; text-align:left; }
+    th, td { border:1px solid #888; padding:8px; text-align:left; }
+    th { background:#5F9EA0; color:white; }
+
+    /* Footer */
+    footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
   </style>
 </head>
 <body>
@@ -63,7 +70,7 @@
     <div id="message"></div>
   </form>
 
-  <!-- Conteneur pour barre et tableau -->
+  <!-- Conteneur barre + tableau -->
   <div id="depProgressContainer" style="display:none;">
     <h1 class="titre-progression">Progression du département</h1>
     <div id="progressContainer">
@@ -92,18 +99,17 @@ const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depProgressContainer = document.getElementById('depProgressContainer');
 const progressBar = document.getElementById('progressBar');
+const tbody = document.querySelector("#tableDep tbody");
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhhgYnxxmvBorT_HDlFKpyyu0IdWJ-PQZFM0TdCLk4USEro1utDQ0Y6NNF4p92pPY4/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWObEWEaK6GO55kOvZ-nIMNwOlAIA7i5h-mD1qYgBm8v46o7Q7KvuXFjXWRtyL4PXZ/exec';
 
 let departementsData = [];
-let surveillancesData = [];
 
 // Charger départements et jours
 fetch(SCRIPT_URL)
   .then(res => res.json())
   .then(data => {
     departementsData = data.departements || [];
-    surveillancesData = data.surveillances || [];
 
     const depSelect = document.getElementById('departement');
     depSelect.innerHTML = '<option value="">--Choisir--</option>';
@@ -122,6 +128,12 @@ fetch(SCRIPT_URL)
       opt.textContent = j;
       jourSelect.appendChild(opt);
     });
+  })
+  .catch(err => {
+    console.error("Erreur chargement départements/jours :", err);
+    messageDiv.style.color = 'red';
+    messageDiv.textContent = "Impossible de charger les départements et jours.";
+    setTimeout(() => { messageDiv.textContent = ""; }, 3000);
   });
 
 // Masquer tableau si changement de département
@@ -170,17 +182,14 @@ form.addEventListener('submit', e => {
 function afficherTableauDepartement(departement, emailChef){
   depProgressContainer.style.display = 'none'; // cacher avant rechargement
 
-  fetch(SCRIPT_URL)
+  fetch(SCRIPT_URL + "?departement=" + encodeURIComponent(departement) + "&emailChef=" + encodeURIComponent(emailChef))
     .then(res => res.json())
     .then(data => {
-      surveillancesData = data.surveillances || [];
-
-      const surveillancesDep = surveillancesData.filter(s => s.departement === departement && s.emailChef === emailChef);
-      const tbody = document.querySelector("#tableDep tbody");
       tbody.innerHTML = "";
+      const surveillancesDep = data.surveillances || [];
       surveillancesDep.forEach(s => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${s.nomPrenom}</td><td>${s.jour}</td>`;
+        tr.innerHTML = `<td>${s.nom}</td><td>${s.jour}</td>`;
         tbody.appendChild(tr);
       });
 
@@ -190,6 +199,7 @@ function afficherTableauDepartement(departement, emailChef){
       const pct = Math.min(100, Math.round((surveillancesDep.length / total) * 100));
       progressBar.style.width = pct + "%";
       progressBar.textContent = pct + "%";
+
       if(pct < 50){ progressBar.style.background="#f44336"; }
       else if(pct < 80){ progressBar.style.background="#ff9800"; }
       else if(pct < 100){ progressBar.style.background="#2196F3"; }
