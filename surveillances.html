@@ -12,7 +12,9 @@
     nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
 
-    h1, .titre-progression, .titre-tableau { font-size:26px; font-weight:bold; margin-bottom:15px; }
+    h1, .titre-progression, .titre-tableau {
+      font-size:26px; font-weight:bold; margin-bottom:15px;
+    }
 
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
     input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
@@ -20,6 +22,7 @@
     button:hover { background:#5a6b7a; }
     #message { margin-top:15px; font-weight:bold; font-size:16px; }
 
+    /* Barre de progression */
     #progressContainer { width:100%; background:#ddd; margin-top:10px; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
 
@@ -27,10 +30,9 @@
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
 
-    #exportBtn { display:none; background:#4CAF50; }
-    #exportBtn:hover { background:#45a049; }
+    footer { background:#FF8C00; color:white; text-align:center; padding:15px; font-weight:bold; }
 
-    footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
+    #exportBtn { display:none; margin-top:15px; }
   </style>
 </head>
 <body>
@@ -68,6 +70,7 @@
     <div id="message"></div>
   </form>
 
+  <!-- Conteneur barre et tableau -->
   <div id="depProgressContainer" style="display:none;">
     <h1 class="titre-progression">Progression du département</h1>
     <div id="progressContainer">
@@ -100,8 +103,8 @@ const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depProgressContainer = document.getElementById('depProgressContainer');
 const progressBar = document.getElementById('progressBar');
-const tableBody = document.querySelector("#tableDep tbody");
 const exportBtn = document.getElementById('exportBtn');
+const tbody = document.querySelector("#tableDep tbody");
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby06y4FAUhrmQkicen9RqqGooC_rN586mu8HVx4TxYS_MjKu6ofmW7zd0Ue9iUoQozQ/exec'; // remplacer par ton URL;
 
@@ -137,6 +140,7 @@ fetch(SCRIPT_URL)
 // Masquer tableau si changement de département
 document.getElementById('departement').addEventListener('change', () => {
   depProgressContainer.style.display = 'none';
+  exportBtn.style.display = 'none';
 });
 
 // Envoi du formulaire
@@ -145,11 +149,16 @@ form.addEventListener('submit', e => {
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
+  const nomPrenom = document.getElementById('nomPrenom').value;
+  const email = document.getElementById('email').value;
+  const departement = document.getElementById('departement').value;
+  const jourChoisi = document.getElementById('jour').value;
+
   const formData = new FormData();
-  formData.append('nomPrenom', document.getElementById('nomPrenom').value);
-  formData.append('email', document.getElementById('email').value);
-  formData.append('departement', document.getElementById('departement').value);
-  formData.append('jour', document.getElementById('jour').value);
+  formData.append('nomPrenom', nomPrenom);
+  formData.append('email', email);
+  formData.append('departement', departement);
+  formData.append('jour', jourChoisi);
   formData.append('formType', 'surveillance');
 
   fetch(SCRIPT_URL, { method: 'POST', body: formData })
@@ -159,9 +168,9 @@ form.addEventListener('submit', e => {
       messageDiv.textContent = data.message;
       setTimeout(() => { messageDiv.textContent = ""; }, 3000);
 
-      if(data.status === 'success') {
+      if(data.status === 'success'){
         form.reset();
-        afficherTableauDepartement(document.getElementById('departement').value, document.getElementById('email').value, data);
+        afficherTableauDepartement(departement, email);
       }
     })
     .catch(err => {
@@ -171,26 +180,27 @@ form.addEventListener('submit', e => {
     });
 });
 
-// Affichage tableau + barre de progression pour le chef
-function afficherTableauDepartement(departement, emailChef, postData=null){
+// Affichage tableau + barre de progression + gestion bouton export
+function afficherTableauDepartement(departement, emailChef){
   depProgressContainer.style.display = 'none'; // cacher avant rechargement
 
-  fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement) + '&emailChef=' + encodeURIComponent(emailChef))
+  fetch(SCRIPT_URL + "?departement=" + encodeURIComponent(departement) + "&emailChef=" + encodeURIComponent(emailChef))
     .then(res => res.json())
     .then(data => {
       surveillancesData = data.surveillances || [];
 
-      tableBody.innerHTML = "";
-      surveillancesData.forEach(s => {
+      const surveillancesDep = surveillancesData.filter(s => s.departement === departement);
+      tbody.innerHTML = "";
+      surveillancesDep.forEach(s => {
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${departement}</td><td>${s.jour}</td>`;
-        tableBody.appendChild(tr);
+        tbody.appendChild(tr);
       });
 
       // Barre de progression
       const depInfo = departementsData.find(d => d.nom === departement);
       const total = depInfo ? depInfo.nbEnseignants : 1;
-      const pct = Math.min(100, Math.round((surveillancesData.length / total) * 100));
+      const pct = Math.min(100, Math.round((surveillancesDep.length / total) * 100));
       progressBar.style.width = pct + "%";
       progressBar.textContent = pct + "%";
       if(pct < 50){ progressBar.style.background="#f44336"; }
@@ -200,8 +210,8 @@ function afficherTableauDepartement(departement, emailChef, postData=null){
 
       depProgressContainer.style.display = 'block';
 
-      // Afficher bouton Export si département complet
-      if(postData && postData.status === 'success' && surveillancesData.length >= total){
+      // Afficher le bouton Export si département complet
+      if (surveillancesDep.length >= total) {
         exportBtn.style.display = 'inline-block';
       } else {
         exportBtn.style.display = 'none';
@@ -209,14 +219,16 @@ function afficherTableauDepartement(departement, emailChef, postData=null){
     });
 }
 
-// Export en Excel
+// Export Excel
 exportBtn.addEventListener('click', () => {
   const wb = XLSX.utils.book_new();
   const wsData = [["Date de remplissage","Nom et Prénom","Département","Jour choisi"]];
-  surveillancesData.forEach(s => wsData.push([new Date(s.date).toLocaleString(), s.nom, s.departement, s.jour]));
+  surveillancesData.forEach(s => {
+    wsData.push([new Date(s.date).toLocaleString(), s.nom, s.departement, s.jour]);
+  });
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   XLSX.utils.book_append_sheet(wb, ws, "Surveillances");
-  XLSX.writeFile(wb, "Surveillances_" + depProgressContainer.querySelector("h1").textContent + ".xlsx");
+  XLSX.writeFile(wb, "Surveillances_" + document.getElementById('departement').value + ".xlsx");
 });
 
 // Service Worker
@@ -228,7 +240,7 @@ if ('serviceWorker' in navigator) {
 </script>
 
 <!-- Librairie SheetJS pour export Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
