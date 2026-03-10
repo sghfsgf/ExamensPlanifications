@@ -1,34 +1,36 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Surveillances - SGH Planification</title>
-<style>
-  body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
-  nav { background:#5F9EA0; padding:10px; }
-  nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
-  nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
-  main { padding:20px; }
-  h1, .titre-tableau, .titre-progression { font-size:26px; font-weight:bold; margin-bottom:15px; }
+  <meta charset="UTF-8">
+  <title>Surveillances - SGH Planification</title>
+  <style>
+    body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
+    nav { background:#5F9EA0; padding:10px; }
+    nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
+    nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
+    main { padding:20px; }
+    h1, .titre-tableau, .titre-progression { font-size:26px; font-weight:bold; margin-bottom:15px; }
 
-  label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
-  input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
-  button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
-  button:hover { background:#5a6b7a; }
-  #message { margin-top:15px; font-weight:bold; font-size:16px; }
+    label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
+    input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
+    button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
+    button:hover { background:#5a6b7a; }
+    #message { margin-top:15px; font-weight:bold; font-size:16px; }
 
-  /* Barre de progression */
-  #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; padding:10px; border-radius:5px; }
-  #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; border-radius:3px; }
+    /* Barre de progression */
+    #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; padding:10px; border-radius:4px; }
+    #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; border-radius:4px; }
+    #restant { margin-top:5px; font-weight:bold; }
 
-  table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
-  table, th, td { border:1px solid #888; }
-  th, td { padding:8px; text-align:left; }
+    table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
+    table, th, td { border:1px solid #888; }
+    th, td { padding:8px; text-align:left; }
 
-  #restant { font-weight:bold; margin-top:10px; }
+    #exportBtn { background:#4CAF50; margin-top:10px; }
+    #exportBtn:hover { background:#45a049; }
 
-  footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
-</style>
+    footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
+  </style>
 </head>
 <body>
 
@@ -68,8 +70,7 @@
   <div id="progressContainer">
     <h1 class="titre-progression">Progression du département</h1>
     <div id="progressBar">0%</div>
-    <div id="restant">Enseignants restant à s'inscrire : 0</div>
-    <button id="exportExcel">Exporter en Excel</button>
+    <div id="restant"></div>
   </div>
 
   <table id="tableDep">
@@ -83,6 +84,8 @@
     </thead>
     <tbody></tbody>
   </table>
+
+  <button id="exportBtn" style="display:none;">Exporter Excel</button>
 </main>
 
 <footer>
@@ -96,37 +99,36 @@ const depSelect = document.getElementById('departement');
 const jourSelect = document.getElementById('jour');
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
+const restantDiv = document.getElementById('restant');
 const tableDep = document.getElementById('tableDep');
 const tbody = tableDep.querySelector('tbody');
-const restantDiv = document.getElementById('restant');
-const exportBtn = document.getElementById('exportExcel');
+const exportBtn = document.getElementById('exportBtn');
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQEPwh_dLKoZPyB1D1ppEPbPGWjQGP8wSsOATtUr-XaTbs7Br8FsHGf8fV60I94y4g/exec'; // mettre ton URL Apps Script
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec'; // remplacer par ton URL
 
 // Charger départements et jours
 fetch(SCRIPT_URL)
-.then(res => res.json())
-.then(data => {
-  depSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.departements.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.nom;
-    opt.textContent = d.nom;
-    depSelect.appendChild(opt);
+  .then(res => res.json())
+  .then(data => {
+    depSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.departements.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.nom;
+      opt.textContent = d.nom;
+      depSelect.appendChild(opt);
+    });
+    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.jours.forEach(j => {
+      const opt = document.createElement('option');
+      opt.value = j;
+      opt.textContent = j;
+      jourSelect.appendChild(opt);
+    });
   });
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.jours.forEach(j => {
-    const opt = document.createElement('option');
-    opt.value = j;
-    opt.textContent = j;
-    jourSelect.appendChild(opt);
-  });
-});
 
-// Masquer tableau et barre si changement de département
+// Masquer tableau et barre quand changement département
 depSelect.addEventListener('change', () => {
-  progressContainer.style.display = 'none';
-  tableDep.style.display = 'none';
+  afficherTableau(depSelect.value);
 });
 
 // Envoi du formulaire
@@ -161,49 +163,54 @@ form.addEventListener('submit', e => {
     });
 });
 
-// Affichage tableau, barre et nombre restant
+// Affichage tableau + barre + restant
 function afficherTableau(departement){
+  if(!departement) return;
   progressContainer.style.display='none';
   tableDep.style.display='none';
+  exportBtn.style.display='none';
 
   fetch(SCRIPT_URL+'?departement='+encodeURIComponent(departement))
-    .then(res=>res.json())
-    .then(data=>{
-      tbody.innerHTML="";
-      data.surveillances.forEach(s=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
+    .then(res => res.json())
+    .then(data => {
+      tbody.innerHTML = "";
+      data.surveillances.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
         tbody.appendChild(tr);
       });
 
-      // Barre de progression + restant
+      // Mettre à jour barre de progression et nombre restant
       fetch(SCRIPT_URL)
-        .then(res=>res.json())
-        .then(depData=>{
-          const depInfo = depData.departements.find(d=>d.nom===departement);
+        .then(res => res.json())
+        .then(depData => {
+          const depInfo = depData.departements.find(d => d.nom === departement);
           const total = depInfo ? depInfo.nbEnseignants : 1;
           const inscrits = data.surveillances.length;
+          const restant = total - inscrits;
           const pct = Math.min(100, Math.round((inscrits/total)*100));
+
           progressBar.style.width = pct+'%';
           progressBar.textContent = pct+'%';
-          restantDiv.textContent = `Enseignants restant à s'inscrire : ${total - inscrits}`;
-
           if(pct<50) progressBar.style.background="#f44336";
           else if(pct<80) progressBar.style.background="#ff9800";
           else if(pct<100) progressBar.style.background="#2196F3";
           else progressBar.style.background="#4CAF50";
 
-          progressContainer.style.display='block';
-          tableDep.style.display='table';
+          restantDiv.textContent = "Enseignants restants : " + restant;
+
+          progressContainer.style.display = 'block';
+          tableDep.style.display = 'table';
+          exportBtn.style.display = 'inline-block';
         });
     });
 }
 
 // Export Excel
-exportBtn.addEventListener('click', ()=>{
+exportBtn.addEventListener('click', () => {
   const dep = depSelect.value;
-  if(!dep) return alert("Choisir un département");
-  window.open(SCRIPT_URL+'?departement='+encodeURIComponent(dep)+'&export=excel', '_blank');
+  if(!dep) return;
+  window.open(SCRIPT_URL+'?departement='+encodeURIComponent(dep)+'&export=excel','_blank');
 });
 </script>
 
