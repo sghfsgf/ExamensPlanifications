@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#7aa1c4"> 
   <title>Surveillances - SGH Planification</title>
   <style>
     body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
@@ -10,7 +12,8 @@
     nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
 
-    h1, .titre-tableau, .titre-progression { font-size:26px; font-weight:bold; margin-bottom:15px; }
+    /* Titres uniformes 26px bold */
+    h1, .titre-progression, .titre-tableau { font-size:26px; font-weight:bold; margin-bottom:15px; }
 
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
     input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
@@ -19,12 +22,13 @@
     #message { margin-top:15px; font-weight:bold; font-size:16px; }
 
     /* Barre de progression */
+    #depProgressContainer { display:none; margin-top:20px; }
     #progressContainer { width:100%; background:#ddd; margin-top:10px; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
 
     table { width:100%; border-collapse: collapse; margin-top:10px; }
-    th, td { border:1px solid #888; padding:8px; text-align:left; }
-    th { background:#5F9EA0; color:white; }
+    table, th, td { border:1px solid #888; }
+    th, td { padding:8px; text-align:left; }
 
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
   </style>
@@ -64,21 +68,26 @@
     <div id="message"></div>
   </form>
 
-  <h1 class="titre-progression">Progression du département</h1>
-  <div id="progressContainer"><div id="progressBar">0%</div></div>
+  <!-- Conteneur pour barre et tableau -->
+  <div id="depProgressContainer">
+    <h1 class="titre-progression">Progression du département</h1>
+    <div id="progressContainer">
+      <div id="progressBar">0%</div>
+    </div>
 
-  <h1 class="titre-tableau">Tableau des surveillances</h1>
-  <table id="tableSurveillances">
-    <thead>
-      <tr>
-        <th>Date de remplissage</th>
-        <th>Nom de l’enseignant</th>
-        <th>Département</th>
-        <th>Jour choisi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <h1 class="titre-tableau">Tableau des surveillances</h1>
+    <table id="tableDep">
+      <thead>
+        <tr>
+          <th>Date de remplissage</th>
+          <th>Nom</th>
+          <th>Département</th>
+          <th>Jour choisi</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </main>
 
 <footer>
@@ -88,68 +97,43 @@
 <script>
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
+const depProgressContainer = document.getElementById('depProgressContainer');
 const progressBar = document.getElementById('progressBar');
-const tableBody = document.querySelector("#tableSurveillances tbody");
+const tableBody = document.querySelector("#tableDep tbody");
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws-KSWuX5uAJk1R4HodhBxgYo75DbYJT46kIwkxcDkKRNpuzbcsGiBVkCanfVOTClz/exec'; // mettre ton URL Apps Script
+// URL Apps Script
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoGI47pLE09SwQcpFf_NlAGhASB8LsZJQ58BEiONTUKic0qXT88AwkO688OcIJGh0A/exec';
+
+let departementsData = [];
 
 // Charger départements et jours
 fetch(SCRIPT_URL)
-.then(res => res.json())
-.then(data => {
-  const depSelect = document.getElementById('departement');
-  depSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.departements.forEach(dep => {
-    const opt = document.createElement('option');
-    opt.value = dep.nom;
-    opt.textContent = dep.nom;
-    depSelect.appendChild(opt);
-  });
-
-  const jourSelect = document.getElementById('jour');
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.jours.forEach(j => {
-    const opt = document.createElement('option');
-    opt.value = j;
-    opt.textContent = j;
-    jourSelect.appendChild(opt);
-  });
-});
-
-// Affichage tableau et barre
-function updateTable(departement) {
-  if(!departement) return;
-  fetch(SCRIPT_URL + "?departement=" + encodeURIComponent(departement))
   .then(res => res.json())
   .then(data => {
-    tableBody.innerHTML = "";
-    let nbRemplis = 0;
-    data.surveillances.forEach(item => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${new Date(item.date).toLocaleString()}</td><td>${item.nom}</td><td>${item.departement}</td><td>${item.jour}</td>`;
-      tableBody.appendChild(tr);
-      nbRemplis++;
+    departementsData = data.departements || [];
+
+    const depSelect = document.getElementById('departement');
+    depSelect.innerHTML = '<option value="">--Choisir--</option>';
+    departementsData.forEach(dep => {
+      const opt = document.createElement('option');
+      opt.value = dep.nom;
+      opt.textContent = dep.nom;
+      depSelect.appendChild(opt);
     });
 
-    // Barre de progression
-    fetch(SCRIPT_URL)
-    .then(res => res.json())
-    .then(depData => {
-      const depInfo = depData.departements.find(d => d.nom === departement);
-      const total = depInfo ? depInfo.nbEnseignants : 1;
-      const pct = Math.min(100, Math.round((nbRemplis / total) * 100));
-      progressBar.style.width = pct + "%";
-      progressBar.textContent = pct + "%";
-      if(pct<50) progressBar.style.background="#f44336";
-      else if(pct<80) progressBar.style.background="#ff9800";
-      else if(pct<100) progressBar.style.background="#2196F3";
-      else progressBar.style.background="#4CAF50";
+    const jourSelect = document.getElementById('jour');
+    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.jours.forEach(j => {
+      const opt = document.createElement('option');
+      opt.value = j;
+      opt.textContent = j;
+      jourSelect.appendChild(opt);
     });
   });
-}
 
-document.getElementById('departement').addEventListener('change', function() {
-  updateTable(this.value);
+// Masquer tableau si changement de département
+document.getElementById('departement').addEventListener('change', () => {
+  depProgressContainer.style.display = 'none';
 });
 
 // Envoi du formulaire
@@ -158,36 +142,72 @@ form.addEventListener('submit', e => {
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
+  const nomPrenom = document.getElementById('nomPrenom').value;
+  const email = document.getElementById('email').value;
+  const departement = document.getElementById('departement').value;
+  const jourChoisi = document.getElementById('jour').value;
+
   const formData = new FormData();
-  formData.append('nomPrenom', document.getElementById('nomPrenom').value);
-  formData.append('email', document.getElementById('email').value);
-  formData.append('departement', document.getElementById('departement').value);
-  formData.append('jour', document.getElementById('jour').value);
+  formData.append('nomPrenom', nomPrenom);
+  formData.append('email', email);
+  formData.append('departement', departement);
+  formData.append('jour', jourChoisi);
   formData.append('formType', 'surveillance');
 
   fetch(SCRIPT_URL, { method: 'POST', body: formData })
-  .then(res => res.json())
-  .then(data => {
-    messageDiv.style.color = (data.status === 'success') ? 'green' : 'red';
-    messageDiv.textContent = data.message;
-    setTimeout(() => { messageDiv.textContent = ""; }, 3000);
-    if(data.status==='success') {
-      form.reset();
-      updateTable(document.getElementById('departement').value);
-    }
-  })
-  .catch(err => {
-    messageDiv.style.color = 'red';
-    messageDiv.textContent = 'Erreur réseau ou serveur.';
-    setTimeout(() => { messageDiv.textContent = ""; }, 3000);
-  });
+    .then(res => res.json())
+    .then(data => {
+      messageDiv.style.color = (data.status === 'success') ? 'green' : 'red';
+      messageDiv.textContent = data.message;
+      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+
+      if(data.status === 'success'){
+        form.reset();
+        afficherTableauDepartement(departement, email);
+      }
+    })
+    .catch(err => {
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'Erreur réseau ou serveur.';
+      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+    });
 });
+
+// Affichage tableau + barre de progression
+function afficherTableauDepartement(departement, emailChef){
+  depProgressContainer.style.display = 'none'; // cacher avant rechargement
+
+  fetch(SCRIPT_URL + "?departement=" + encodeURIComponent(departement) + "&emailChef=" + encodeURIComponent(emailChef))
+    .then(res => res.json())
+    .then(data => {
+      const surveillancesDep = data.surveillances || [];
+      tableBody.innerHTML = "";
+      surveillancesDep.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${departement}</td><td>${s.jour}</td>`;
+        tableBody.appendChild(tr);
+      });
+
+      // Barre de progression
+      const depInfo = departementsData.find(d => d.nom === departement);
+      const total = depInfo ? depInfo.nbEnseignants : 1;
+      const pct = Math.min(100, Math.round((surveillancesDep.length / total) * 100));
+      progressBar.style.width = pct + "%";
+      progressBar.textContent = pct + "%";
+      if(pct < 50){ progressBar.style.background="#f44336"; }
+      else if(pct < 80){ progressBar.style.background="#ff9800"; }
+      else if(pct < 100){ progressBar.style.background="#2196F3"; }
+      else { progressBar.style.background="#4CAF50"; }
+
+      depProgressContainer.style.display = 'block';
+    });
+}
 
 // Service Worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js')
-  .then(() => console.log('Service Worker enregistré !'))
-  .catch(err => console.log('Erreur Service Worker :', err));
+    .then(() => console.log('Service Worker enregistré !'))
+    .catch(err => console.log('Erreur Service Worker :', err));
 }
 </script>
 
