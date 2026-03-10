@@ -25,6 +25,8 @@
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
 
+    #exportBtn { display:none; margin-top:20px; }
+
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
   </style>
 </head>
@@ -63,16 +65,19 @@
     <div id="message"></div>
   </form>
 
+  <!-- Barre de progression -->
   <div id="progressContainer">
     <h1 class="titre-progression">Progression du département</h1>
     <div id="progressBar">0%</div>
   </div>
 
+  <!-- Tableau -->
   <table id="tableDep">
+    <h1 class="titre-tableau">Tableau des surveillances</h1>
     <thead>
       <tr>
         <th>Date de remplissage</th>
-        <th>Nom et prénom de l’enseignant</th>
+        <th>Nom et prénom</th>
         <th>Département</th>
         <th>Jour choisi</th>
       </tr>
@@ -80,9 +85,7 @@
     <tbody></tbody>
   </table>
 
-  <!-- Bouton Export Excel -->
-  <button id="exportBtn" style="display:none;">Exporter en Excel</button>
-
+  <button id="exportBtn">Exporter en Excel</button>
 </main>
 
 <footer>
@@ -132,8 +135,8 @@ depSelect.addEventListener('change', () => {
 // Envoi du formulaire
 form.addEventListener('submit', e => {
   e.preventDefault();
-  messageDiv.textContent = "Envoi en cours...";
-  messageDiv.style.color = "black";
+  messageDiv.style.color = 'black';
+  messageDiv.textContent = 'Envoi en cours...';
 
   const formData = new FormData();
   formData.append('formType','surveillance');
@@ -147,17 +150,17 @@ form.addEventListener('submit', e => {
     .then(data => {
       messageDiv.style.color = (data.status==='success')?'green':'red';
       messageDiv.textContent = data.message;
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
+      setTimeout(()=>{ messageDiv.textContent=''; },3000);
 
       if(data.status==='success'){
         form.reset();
         afficherTableau(depSelect.value);
       }
     })
-    .catch(err => {
+    .catch(err=>{
       messageDiv.style.color='red';
       messageDiv.textContent='Erreur réseau ou serveur.';
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
+      setTimeout(()=>{ messageDiv.textContent=''; },3000);
     });
 });
 
@@ -170,10 +173,10 @@ function afficherTableau(departement){
   fetch(SCRIPT_URL+'?departement='+encodeURIComponent(departement))
     .then(res=>res.json())
     .then(data=>{
-      tbody.innerHTML="";
+      tbody.innerHTML = '';
       data.surveillances.forEach(s=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${departement}</td><td>${s.jour}</td>`;
         tbody.appendChild(tr);
       });
 
@@ -194,23 +197,20 @@ function afficherTableau(departement){
           progressContainer.style.display='block';
           tableDep.style.display='table';
 
-          // Bouton Export visible si département complet
-          exportBtn.style.display = (data.surveillances.length >= total) ? 'inline-block' : 'none';
+          // Si département complet, montrer bouton export
+          if(data.surveillances.length >= total){
+            exportBtn.style.display='inline-block';
+          } else {
+            exportBtn.style.display='none';
+          }
         });
     });
 }
 
 // Export Excel
 exportBtn.addEventListener('click', ()=>{
-  const departement = depSelect.value;
-  window.open(SCRIPT_URL+'?export=true&departement='+encodeURIComponent(departement), '_blank');
+  window.open(SCRIPT_URL+'?departement='+encodeURIComponent(depSelect.value)+'&export=excel','_blank');
 });
-
-// Service Worker
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(()=>console.log('Service Worker enregistré !')).catch(err=>console.log('Erreur SW :',err));
-}
 </script>
-
 </body>
 </html>
