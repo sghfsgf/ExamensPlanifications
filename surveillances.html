@@ -26,6 +26,10 @@
     table { width:100%; border-collapse: collapse; margin-top:10px; }
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
+
+    #exportBtn { display:none; background:#4CAF50; }
+    #exportBtn:hover { background:#45a049; }
+
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
   </style>
 </head>
@@ -75,24 +79,21 @@
       <thead>
         <tr>
           <th>Date de remplissage</th>
-          <th>Nom et prénom</th>
+          <th>Nom et Prénom</th>
           <th>Département</th>
           <th>Jour choisi</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-  </div>
 
-  <button id="exportExcelBtn" style="display:none; margin-top:15px;">Exporter en Excel</button>
+    <button id="exportBtn">Exporter en Excel</button>
+  </div>
 </main>
 
 <footer>
   &copy; 2026 SGH pour Planification et Programmation
 </footer>
-
-<!-- Librairie XLSX pour export Excel -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
 const form = document.getElementById('formSurveillance');
@@ -100,7 +101,7 @@ const messageDiv = document.getElementById('message');
 const depProgressContainer = document.getElementById('depProgressContainer');
 const progressBar = document.getElementById('progressBar');
 const tableBody = document.querySelector("#tableDep tbody");
-const exportBtn = document.getElementById('exportExcelBtn');
+const exportBtn = document.getElementById('exportBtn');
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby06y4FAUhrmQkicen9RqqGooC_rN586mu8HVx4TxYS_MjKu6ofmW7zd0Ue9iUoQozQ/exec'; // remplacer par ton URL;
 
@@ -144,16 +145,11 @@ form.addEventListener('submit', e => {
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
-  const nomPrenom = document.getElementById('nomPrenom').value;
-  const email = document.getElementById('email').value;
-  const departement = document.getElementById('departement').value;
-  const jourChoisi = document.getElementById('jour').value;
-
   const formData = new FormData();
-  formData.append('nomPrenom', nomPrenom);
-  formData.append('email', email);
-  formData.append('departement', departement);
-  formData.append('jour', jourChoisi);
+  formData.append('nomPrenom', document.getElementById('nomPrenom').value);
+  formData.append('email', document.getElementById('email').value);
+  formData.append('departement', document.getElementById('departement').value);
+  formData.append('jour', document.getElementById('jour').value);
   formData.append('formType', 'surveillance');
 
   fetch(SCRIPT_URL, { method: 'POST', body: formData })
@@ -163,9 +159,9 @@ form.addEventListener('submit', e => {
       messageDiv.textContent = data.message;
       setTimeout(() => { messageDiv.textContent = ""; }, 3000);
 
-      if(data.status === 'success'){
+      if(data.status === 'success') {
         form.reset();
-        afficherTableauDepartement(departement, email);
+        afficherTableauDepartement(document.getElementById('departement').value, document.getElementById('email').value, data);
       }
     })
     .catch(err => {
@@ -176,27 +172,25 @@ form.addEventListener('submit', e => {
 });
 
 // Affichage tableau + barre de progression pour le chef
-function afficherTableauDepartement(departement, emailChef){
+function afficherTableauDepartement(departement, emailChef, postData=null){
   depProgressContainer.style.display = 'none'; // cacher avant rechargement
 
-  fetch(SCRIPT_URL)
+  fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement) + '&emailChef=' + encodeURIComponent(emailChef))
     .then(res => res.json())
     .then(data => {
       surveillancesData = data.surveillances || [];
 
-      const surveillancesDep = surveillancesData.filter(s => s.departement === departement && s.emailChef === emailChef);
-      const tbody = document.querySelector("#tableDep tbody");
-      tbody.innerHTML = "";
-      surveillancesDep.forEach(s => {
+      tableBody.innerHTML = "";
+      surveillancesData.forEach(s => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${s.date}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
-        tbody.appendChild(tr);
+        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${departement}</td><td>${s.jour}</td>`;
+        tableBody.appendChild(tr);
       });
 
       // Barre de progression
       const depInfo = departementsData.find(d => d.nom === departement);
       const total = depInfo ? depInfo.nbEnseignants : 1;
-      const pct = Math.min(100, Math.round((surveillancesDep.length / total) * 100));
+      const pct = Math.min(100, Math.round((surveillancesData.length / total) * 100));
       progressBar.style.width = pct + "%";
       progressBar.textContent = pct + "%";
       if(pct < 50){ progressBar.style.background="#f44336"; }
@@ -206,8 +200,8 @@ function afficherTableauDepartement(departement, emailChef){
 
       depProgressContainer.style.display = 'block';
 
-      // Vérifier si département complet pour afficher bouton Export
-      if(surveillancesDep.length >= total){
+      // Afficher bouton Export si département complet
+      if(postData && postData.status === 'success' && surveillancesData.length >= total){
         exportBtn.style.display = 'inline-block';
       } else {
         exportBtn.style.display = 'none';
@@ -215,25 +209,14 @@ function afficherTableauDepartement(departement, emailChef){
     });
 }
 
-// Export Excel
-exportBtn.addEventListener('click', function(){
-  const ws_data = [];
-  const headers = ["Date de remplissage", "Nom et prénom", "Département", "Jour choisi"];
-  ws_data.push(headers);
-
-  const rows = document.querySelectorAll("#tableDep tbody tr");
-  rows.forEach(tr => {
-    const rowData = Array.from(tr.children).map(td => td.textContent);
-    ws_data.push(rowData);
-  });
-
+// Export en Excel
+exportBtn.addEventListener('click', () => {
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wsData = [["Date de remplissage","Nom et Prénom","Département","Jour choisi"]];
+  surveillancesData.forEach(s => wsData.push([new Date(s.date).toLocaleString(), s.nom, s.departement, s.jour]));
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
   XLSX.utils.book_append_sheet(wb, ws, "Surveillances");
-
-  XLSX.writeFile(wb, "Surveillances_Departement.xlsx");
-
-  exportBtn.style.display = 'none';
+  XLSX.writeFile(wb, "Surveillances_" + depProgressContainer.querySelector("h1").textContent + ".xlsx");
 });
 
 // Service Worker
@@ -243,6 +226,9 @@ if ('serviceWorker' in navigator) {
     .catch(err => console.log('Erreur Service Worker :', err));
 }
 </script>
+
+<!-- Librairie SheetJS pour export Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
