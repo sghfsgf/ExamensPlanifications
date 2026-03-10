@@ -9,7 +9,7 @@
     body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
     nav { background:#5F9EA0; padding:10px; }
     nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
-    nav ul li a { color:white; font-weight:bold; text-decoration:none;   font-size:26px;   /* 🔵 taille augmentée */}
+    nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
     h1 { font-size:32px; font-weight:bold; margin-bottom:20px; }
     label { display:block; margin-top:10px; font-weight:bold; }
@@ -54,6 +54,30 @@
     <button type="submit">Envoyer</button>
     <div id="message"></div>
   </form>
+
+  <!-- Barre de progression -->
+  <div id="progress-container" style="margin-top:20px; display:none;">
+    <label>Progression du département :</label>
+    <div style="width:100%; background:#ddd; height:25px; border-radius:5px; overflow:hidden;">
+      <div id="progress-bar" style="width:0%; height:100%; background:#5F9EA0; text-align:center; color:white; line-height:25px;">0%</div>
+    </div>
+  </div>
+
+  <!-- Tableau département -->
+  <div id="tableau-dep" style="margin-top:20px; display:none;">
+    <h2>Surveillances remplies pour votre département</h2>
+    <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Nom de l’enseignant</th>
+          <th>Jour choisi</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
 </main>
 
 <footer>
@@ -65,7 +89,7 @@ const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 
 // URL Apps Script
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw867roTSIYFUzePWuTdVEr6jvgcHF6KDIyIa045HmKRKk70kuciA51pEpthnnQdc91/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhhgYnxxmvBorT_HDlFKpyyu0IdWJ-PQZFM0TdCLk4USEro1utDQ0Y6NNF4p92pPY4/exec';
 
 // Charger dynamiquement départements et jours
 fetch(SCRIPT_URL)
@@ -75,8 +99,9 @@ fetch(SCRIPT_URL)
     depSelect.innerHTML = '<option value="">--Choisir--</option>';
     data.departements.forEach(dep => {
       const opt = document.createElement('option');
-      opt.value = dep;
-      opt.textContent = dep;
+      opt.value = dep.nom; // si Apps Script renvoie {nom, email, nbEnseignants}
+      opt.textContent = dep.nom;
+      opt.dataset.nbenseignants = dep.nbEnseignants || 0;
       depSelect.appendChild(opt);
     });
 
@@ -96,18 +121,69 @@ fetch(SCRIPT_URL)
     setTimeout(() => { messageDiv.textContent = ""; }, 3000);
   });
 
-// Envoi du formulaire
+// ===== Fonction pour charger le tableau du département et la progression =====
+function loadDepartementTable(departement, emailChef) {
+  fetch(SCRIPT_URL + "?departement=" + encodeURIComponent(departement))
+    .then(res => res.json())
+    .then(data => {
+      const tableBody = document.getElementById('table-body');
+      tableBody.innerHTML = ""; // Reset
+      let totalRemplis = 0;
+
+      data.surveillances.forEach(item => {
+        totalRemplis++;
+        const row = document.createElement('tr');
+        row.innerHTML = "<td>"+new Date(item.date).toLocaleString()+"</td><td>"+item.nom+"</td><td>"+item.jour+"</td>";
+        tableBody.appendChild(row);
+      });
+
+      // Barre de progression
+      let nbEnseignantsMax = 0;
+      const depSelect = document.getElementById('departement');
+      for (let i=0;i<depSelect.options.length;i++){
+        if(depSelect.options[i].value === departement){
+          nbEnseignantsMax = parseInt(depSelect.options[i].dataset.nbenseignants) || 0;
+          break;
+        }
+      }
+
+      const progressContainer = document.getElementById('progress-container');
+      const progressBar = document.getElementById('progress-bar');
+      if(nbEnseignantsMax>0){
+        const prog = Math.round((totalRemplis / nbEnseignantsMax)*100);
+        progressBar.style.width = prog+"%";
+        progressBar.textContent = prog+"%";
+        progressContainer.style.display = "block";
+      }
+
+      // Affichage du tableau seulement pour le chef du département
+      if(emailChef === document.getElementById('email').value){
+        document.getElementById('tableau-dep').style.display = "block";
+      } else {
+        document.getElementById('tableau-dep').style.display = "none";
+      }
+
+    })
+    .catch(err => console.error("Erreur chargement tableau département :", err));
+}
+
+// ===== Modification du submit pour actualiser tableau et barre =====
 form.addEventListener('submit', e => {
   e.preventDefault();
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
+  const nomPrenomVal = document.getElementById('nomPrenom').value;
+  const emailVal = document.getElementById('email').value;
+  const depVal = document.getElementById('departement').value;
+  const jourVal = document.getElementById('jour').value;
+
   const formData = new FormData();
-  formData.append('nomPrenom', document.getElementById('nomPrenom').value);
-  formData.append('email', document.getElementById('email').value);
-  formData.append('departement', document.getElementById('departement').value);
-  formData.append('jour', document.getElementById('jour').value);
-  formData.append('formType', 'surveillance'); // <-- Important pour Apps Script
+  formData.append('nomPrenom', nomPrenomVal);
+  formData.append('email', emailVal);
+  formData.append('departement', depVal);
+  formData.append('jour', jourVal);
+  formData.append('formType', 'surveillance');
 
   fetch(SCRIPT_URL, { method: 'POST', body: formData })
     .then(res => res.json())
@@ -115,16 +191,32 @@ form.addEventListener('submit', e => {
       messageDiv.style.color = (data.status === 'success') ? 'green' : 'red';
       messageDiv.textContent = data.message;
 
-      // Faire disparaître le message après 3 secondes
-      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+      // Mettre à jour tableau + progression
+      if(data.status === 'success'){
+        form.reset();
+        loadDepartementTable(depVal, emailVal);
+      }
 
-      if(data.status === 'success') form.reset();
+      setTimeout(() => { messageDiv.textContent = ""; }, 3000);
     })
     .catch(err => {
       messageDiv.style.color = 'red';
       messageDiv.textContent = 'Erreur réseau ou serveur.';
       setTimeout(() => { messageDiv.textContent = ""; }, 3000);
     });
+});
+
+// ===== Charger tableau dès changement de département =====
+document.getElementById('departement').addEventListener('change', function(){
+  const depVal = this.value;
+  const emailVal = document.getElementById('email').value;
+  if(depVal && emailVal) loadDepartementTable(depVal, emailVal);
+});
+
+// ===== Faire disparaître tableau à la fermeture ou changement de page =====
+window.addEventListener('beforeunload', function(){
+  document.getElementById('tableau-dep').style.display = "none";
+  document.getElementById('progress-container').style.display = "none";
 });
 
 // Enregistrement du Service Worker
