@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Surveillances - SGH Planification</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#7aa1c4"> 
+  <meta name="theme-color" content="#7aa1c4">
   <style>
     body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
     nav { background:#5F9EA0; padding:10px; }
@@ -17,15 +17,15 @@
     button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
     button:hover { background:#5a6b7a; }
     #message { margin-top:15px; font-weight:bold; font-size:16px; }
-    #exportBtn { display:none; margin-top:15px; background:#4CAF50; }
     #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
     table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
+    #btnExport { margin-top:15px; padding:10px 20px; background:#4CAF50; color:white; border:none; cursor:pointer; font-weight:bold; display:none; border-radius:4px; }
+    #btnExport:hover { background:#45a049; }
   </style>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -44,27 +44,30 @@
   <form id="formSurveillance">
     <label>Nom et Prénom</label>
     <input type="text" id="nomPrenom" required>
+
     <label>Email du chef de département</label>
     <input type="email" id="email" required>
+
     <label>Département</label>
     <select id="departement" required><option value="">Chargement...</option></select>
+
     <label>Jour</label>
     <select id="jour" required><option value="">Chargement...</option></select>
+
     <button type="submit">Envoyer</button>
     <div id="message"></div>
   </form>
 
-  <h1 class="titre-progression">Progression du département</h1>
   <div id="progressContainer">
+    <h1 class="titre-progression">Progression du département</h1>
     <div id="progressBar">0%</div>
   </div>
 
-  <h1 class="titre-tableau">Tableau des surveillances</h1>
   <table id="tableSurveillances">
     <thead>
       <tr>
         <th>Date de remplissage</th>
-        <th>Nom et prénom</th>
+        <th>Nom et prénom de l’enseignant</th>
         <th>Département</th>
         <th>Jour choisi</th>
       </tr>
@@ -72,144 +75,132 @@
     <tbody></tbody>
   </table>
 
-  <button id="exportBtn">Exporter en Excel</button>
+  <button id="btnExport">Exporter en Excel</button>
 </main>
 
 <footer>
   &copy; 2026 SGH pour Planification et Programmation
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwER5ywqO4yTzN0YbRubLckZB0XMHWlJb-9s_aMht8mhb3qm4tujIyd0DYyJRTXYnFZ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzACmUV2yYCJSG_dIH9tyk_W_IwU0p7HVN8gJLsjZYsd-A_Ik9sgqMJUwIyksQjUcTv/exec'; // à remplacer par ton URL de déploiement
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
-const depSelect = document.getElementById('departement');
-const jourSelect = document.getElementById('jour');
-const tableBody = document.querySelector("#tableSurveillances tbody");
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const table = document.getElementById('tableSurveillances');
-const exportBtn = document.getElementById('exportBtn');
+const tableBody = table.querySelector('tbody');
+const btnExport = document.getElementById('btnExport');
 
-let surveillancesData = [];
 let departementsData = [];
+let surveillancesData = [];
 
-// ----- Charger départements et jours -----
+// Charger départements et jours
 fetch(SCRIPT_URL)
-  .then(res => res.json())
-  .then(data => {
-    departementsData = data.departements || [];
-    depSelect.innerHTML = '<option value="">--Choisir--</option>';
-    departementsData.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.nom;
-      opt.textContent = d.nom;
-      depSelect.appendChild(opt);
-    });
-    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-    data.jours.forEach(j => {
-      const opt = document.createElement('option');
-      opt.value = j;
-      opt.textContent = j;
-      jourSelect.appendChild(opt);
-    });
+.then(res => res.json())
+.then(data => {
+  departementsData = data.departements || [];
+  const depSelect = document.getElementById('departement');
+  depSelect.innerHTML = '<option value="">--Choisir--</option>';
+  departementsData.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.nom;
+    opt.textContent = d.nom;
+    depSelect.appendChild(opt);
   });
 
-// ----- Masquer tableau et barre lors du changement de département -----
-depSelect.addEventListener('change', ()=>{
-  table.style.display = 'none';
-  progressContainer.style.display = 'none';
-  exportBtn.style.display = 'none';
+  const jourSelect = document.getElementById('jour');
+  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+  data.jours.forEach(j => {
+    const opt = document.createElement('option');
+    opt.value = j;
+    opt.textContent = j;
+    jourSelect.appendChild(opt);
+  });
 });
 
-// ----- Fonction pour afficher tableau + progression -----
-function updateTable() {
-  const dep = depSelect.value;
-  if(!dep) return;
+// Masquer tableau et progression si département change
+document.getElementById('departement').addEventListener('change', () => {
+  progressContainer.style.display = 'none';
+  table.style.display = 'none';
+  btnExport.style.display = 'none';
+});
 
-  fetch(SCRIPT_URL+"?departement="+encodeURIComponent(dep))
-    .then(res => res.json())
-    .then(data=>{
-      surveillancesData = data.surveillances || [];
-      // Vider tableau
-      tableBody.innerHTML = "";
-      surveillancesData.forEach(s=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${dep}</td><td>${s.jour}</td>`;
-        tableBody.appendChild(tr);
-      });
-
-      // Barre de progression
-      const depInfo = departementsData.find(d=>d.nom===dep);
-      const total = depInfo ? depInfo.nbEnseignants : 1;
-      const pct = Math.min(100, Math.round((surveillancesData.length / total)*100));
-      progressBar.style.width = pct+"%";
-      progressBar.textContent = pct+"%";
-      progressBar.style.background = pct<50?"#f44336":pct<80?"#ff9800":pct<100?"#2196F3":"#4CAF50";
-
-      table.style.display = 'table';
-      progressContainer.style.display = 'block';
-
-      // Afficher le bouton Export si complet
-      exportBtn.style.display = (surveillancesData.length>=total)?"inline-block":"none";
-    });
-}
-
-// ----- Envoi formulaire -----
-form.addEventListener('submit', e=>{
+// Envoi formulaire
+form.addEventListener('submit', e => {
   e.preventDefault();
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
   const formData = new FormData();
+  formData.append('formType','surveillance');
   formData.append('nomPrenom', document.getElementById('nomPrenom').value);
   formData.append('email', document.getElementById('email').value);
-  formData.append('departement', depSelect.value);
-  formData.append('jour', jourSelect.value);
-  formData.append('formType','surveillance');
+  formData.append('departement', document.getElementById('departement').value);
+  formData.append('jour', document.getElementById('jour').value);
 
-  fetch(SCRIPT_URL,{method:'POST',body:formData})
-    .then(res=>res.json())
-    .then(data=>{
-      messageDiv.style.color = data.status==="success"?"green":"red";
-      messageDiv.textContent = data.message;
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
-      if(data.status==="success") {
-        form.reset();
-        updateTable();
-      }
-    })
-    .catch(err=>{
-      messageDiv.style.color='red';
-      messageDiv.textContent='Erreur réseau ou serveur.';
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
-    });
-});
+  fetch(SCRIPT_URL, {method:'POST', body:formData})
+  .then(res => res.json())
+  .then(data => {
+    messageDiv.style.color = data.status==='success'?'green':'red';
+    messageDiv.textContent = data.message;
+    setTimeout(()=>{ messageDiv.textContent=""; },3000);
 
-// ----- Exporter en Excel -----
-exportBtn.addEventListener('click', ()=>{
-  if(!surveillancesData.length) return;
-
-  const ws_data = [["Date de remplissage","Nom et prénom","Département","Jour choisi"]];
-  surveillancesData.forEach(r=>{
-    ws_data.push([new Date(r.date), r.nom, r.departement, r.jour]);
+    if(data.status==='success'){
+      form.reset();
+      updateTable(document.getElementById('departement').value);
+    }
+  })
+  .catch(err => {
+    messageDiv.style.color='red';
+    messageDiv.textContent='Erreur réseau ou serveur.';
   });
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  XLSX.utils.book_append_sheet(wb, ws, depSelect.value);
-
-  XLSX.writeFile(wb, depSelect.value+"_Surveillances.xlsx");
-
-  exportBtn.style.display="none";
 });
 
-// ----- Service Worker -----
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js')
-    .then(()=>console.log('Service Worker enregistré !'))
-    .catch(err=>console.log('Erreur Service Worker :', err));
+// Fonction pour mettre à jour tableau et barre
+function updateTable(departement){
+  fetch(SCRIPT_URL + "?departement="+encodeURIComponent(departement))
+  .then(res => res.json())
+  .then(data => {
+    surveillancesData = data.surveillances || [];
+    tableBody.innerHTML = "";
+    let nbRemplis = 0;
+
+    surveillancesData.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
+      tableBody.appendChild(tr);
+      nbRemplis++;
+    });
+
+    const depInfo = departementsData.find(d => d.nom===departement);
+    const total = depInfo?depInfo.nbEnseignants:1;
+    const pct = Math.min(100, Math.round((nbRemplis/total)*100));
+    progressBar.style.width = pct+"%";
+    progressBar.textContent = pct+"%";
+    progressContainer.style.display='block';
+    table.style.display='table';
+
+    if(pct<50) progressBar.style.background="#f44336";
+    else if(pct<80) progressBar.style.background="#ff9800";
+    else if(pct<100) progressBar.style.background="#2196F3";
+    else { progressBar.style.background="#4CAF50"; btnExport.style.display='inline-block'; }
+  });
 }
+
+// Export Excel
+btnExport.addEventListener('click', ()=>{
+  const wb = XLSX.utils.book_new();
+  const ws_data = [["Date de remplissage","Nom et prénom","Département","Jour choisi"]];
+  surveillancesData.forEach(s=>{
+    ws_data.push([s.date, s.nom, s.departement, s.jour]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb, ws, "Surveillances");
+  XLSX.writeFile(wb,"Surveillances_"+document.getElementById('departement').value+".xlsx");
+  btnExport.style.display='none';
+});
 </script>
 
 </body>
