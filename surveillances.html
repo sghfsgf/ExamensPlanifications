@@ -17,14 +17,13 @@
     button:hover { background:#5a6b7a; }
     #message { margin-top:15px; font-weight:bold; font-size:16px; }
 
+    /* Barre de progression */
     #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
 
     table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
-
-    #exportBtn { display:none; margin-top:10px; }
 
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
   </style>
@@ -73,7 +72,7 @@
     <thead>
       <tr>
         <th>Date de remplissage</th>
-        <th>Nom et prénom</th>
+        <th>Nom et prénom de l’enseignant</th>
         <th>Département</th>
         <th>Jour choisi</th>
       </tr>
@@ -81,7 +80,9 @@
     <tbody></tbody>
   </table>
 
-  <button id="exportBtn">Exporter Excel</button>
+  <!-- Bouton Export Excel -->
+  <button id="exportBtn" style="display:none;">Exporter en Excel</button>
+
 </main>
 
 <footer>
@@ -99,7 +100,7 @@ const tableDep = document.getElementById('tableDep');
 const tbody = tableDep.querySelector('tbody');
 const exportBtn = document.getElementById('exportBtn');
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpHGj_I577cngrl0ASFj86I9Q_oG9x3YnEe6kj0jy9c4NNoPwHKYat2D7GRVe2QJNn/exec'; // Remplacer par ton URL
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpHGj_I577cngrl0ASFj86I9Q_oG9x3YnEe6kj0jy9c4NNoPwHKYat2D7GRVe2QJNn/exec'; // remplacer par ton URL
 
 // Charger départements et jours
 fetch(SCRIPT_URL)
@@ -121,7 +122,7 @@ fetch(SCRIPT_URL)
     });
   });
 
-// Masquer tableau, barre et bouton quand changement département
+// Masquer tableau et barre quand changement département
 depSelect.addEventListener('change', () => {
   progressContainer.style.display = 'none';
   tableDep.style.display = 'none';
@@ -160,7 +161,7 @@ form.addEventListener('submit', e => {
     });
 });
 
-// Affichage tableau + barre + bouton export
+// Affichage tableau + barre
 function afficherTableau(departement){
   progressContainer.style.display='none';
   tableDep.style.display='none';
@@ -193,20 +194,16 @@ function afficherTableau(departement){
           progressContainer.style.display='block';
           tableDep.style.display='table';
 
-          // Si département complet, afficher bouton Export
-          if(data.surveillances.length >= total){
-            exportBtn.style.display='inline-block';
-          } else {
-            exportBtn.style.display='none';
-          }
+          // Bouton Export visible si département complet
+          exportBtn.style.display = (data.surveillances.length >= total) ? 'inline-block' : 'none';
         });
     });
 }
 
 // Export Excel
-exportBtn.addEventListener('click', () => {
-  const wb = XLSX.utils.table_to_book(tableDep, {sheet:"Surveillances"});
-  XLSX.writeFile(wb, depSelect.value+"_surveillances.xlsx");
+exportBtn.addEventListener('click', ()=>{
+  const departement = depSelect.value;
+  window.open(SCRIPT_URL+'?export=true&departement='+encodeURIComponent(departement), '_blank');
 });
 
 // Service Worker
@@ -214,9 +211,6 @@ if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js').then(()=>console.log('Service Worker enregistré !')).catch(err=>console.log('Erreur SW :',err));
 }
 </script>
-
-<!-- Inclure SheetJS pour export Excel -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
