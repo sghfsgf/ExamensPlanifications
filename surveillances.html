@@ -3,28 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <title>Surveillances - SGH Planification</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#7aa1c4">
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
+    body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
     nav { background:#5F9EA0; padding:10px; }
     nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
     nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
-    h1, .titre-progression, .titre-tableau { font-size:26px; font-weight:bold; margin-bottom:15px; }
+    h1, .titre-tableau, .titre-progression { font-size:26px; font-weight:bold; margin-bottom:15px; }
+
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
     input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
     button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
     button:hover { background:#5a6b7a; }
     #message { margin-top:15px; font-weight:bold; font-size:16px; }
+
     #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; }
     #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; }
+
     table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
+
+    #exportBtn { display:none; margin-top:10px; }
+
     footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
-    #btnExport { margin-top:15px; padding:10px 20px; background:#4CAF50; color:white; border:none; cursor:pointer; font-weight:bold; display:none; border-radius:4px; }
-    #btnExport:hover { background:#45a049; }
   </style>
 </head>
 <body>
@@ -49,10 +51,14 @@
     <input type="email" id="email" required>
 
     <label>Département</label>
-    <select id="departement" required><option value="">Chargement...</option></select>
+    <select id="departement" required>
+      <option value="">Chargement...</option>
+    </select>
 
     <label>Jour</label>
-    <select id="jour" required><option value="">Chargement...</option></select>
+    <select id="jour" required>
+      <option value="">Chargement...</option>
+    </select>
 
     <button type="submit">Envoyer</button>
     <div id="message"></div>
@@ -63,11 +69,11 @@
     <div id="progressBar">0%</div>
   </div>
 
-  <table id="tableSurveillances">
+  <table id="tableDep">
     <thead>
       <tr>
         <th>Date de remplissage</th>
-        <th>Nom et prénom de l’enseignant</th>
+        <th>Nom et prénom</th>
         <th>Département</th>
         <th>Jour choisi</th>
       </tr>
@@ -75,59 +81,54 @@
     <tbody></tbody>
   </table>
 
-  <button id="btnExport">Exporter en Excel</button>
+  <button id="exportBtn">Exporter Excel</button>
 </main>
 
 <footer>
   &copy; 2026 SGH pour Planification et Programmation
 </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzACmUV2yYCJSG_dIH9tyk_W_IwU0p7HVN8gJLsjZYsd-A_Ik9sgqMJUwIyksQjUcTv/exec'; // à remplacer par ton URL de déploiement
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
+const depSelect = document.getElementById('departement');
+const jourSelect = document.getElementById('jour');
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
-const table = document.getElementById('tableSurveillances');
-const tableBody = table.querySelector('tbody');
-const btnExport = document.getElementById('btnExport');
+const tableDep = document.getElementById('tableDep');
+const tbody = tableDep.querySelector('tbody');
+const exportBtn = document.getElementById('exportBtn');
 
-let departementsData = [];
-let surveillancesData = [];
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxpHGj_I577cngrl0ASFj86I9Q_oG9x3YnEe6kj0jy9c4NNoPwHKYat2D7GRVe2QJNn/exec'; // Remplacer par ton URL
 
 // Charger départements et jours
 fetch(SCRIPT_URL)
-.then(res => res.json())
-.then(data => {
-  departementsData = data.departements || [];
-  const depSelect = document.getElementById('departement');
-  depSelect.innerHTML = '<option value="">--Choisir--</option>';
-  departementsData.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.nom;
-    opt.textContent = d.nom;
-    depSelect.appendChild(opt);
+  .then(res => res.json())
+  .then(data => {
+    depSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.departements.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.nom;
+      opt.textContent = d.nom;
+      depSelect.appendChild(opt);
+    });
+    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.jours.forEach(j => {
+      const opt = document.createElement('option');
+      opt.value = j;
+      opt.textContent = j;
+      jourSelect.appendChild(opt);
+    });
   });
 
-  const jourSelect = document.getElementById('jour');
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.jours.forEach(j => {
-    const opt = document.createElement('option');
-    opt.value = j;
-    opt.textContent = j;
-    jourSelect.appendChild(opt);
-  });
-});
-
-// Masquer tableau et progression si département change
-document.getElementById('departement').addEventListener('change', () => {
+// Masquer tableau, barre et bouton quand changement département
+depSelect.addEventListener('change', () => {
   progressContainer.style.display = 'none';
-  table.style.display = 'none';
-  btnExport.style.display = 'none';
+  tableDep.style.display = 'none';
+  exportBtn.style.display = 'none';
 });
 
-// Envoi formulaire
+// Envoi du formulaire
 form.addEventListener('submit', e => {
   e.preventDefault();
   messageDiv.textContent = "Envoi en cours...";
@@ -137,71 +138,85 @@ form.addEventListener('submit', e => {
   formData.append('formType','surveillance');
   formData.append('nomPrenom', document.getElementById('nomPrenom').value);
   formData.append('email', document.getElementById('email').value);
-  formData.append('departement', document.getElementById('departement').value);
-  formData.append('jour', document.getElementById('jour').value);
+  formData.append('departement', depSelect.value);
+  formData.append('jour', jourSelect.value);
 
-  fetch(SCRIPT_URL, {method:'POST', body:formData})
-  .then(res => res.json())
-  .then(data => {
-    messageDiv.style.color = data.status==='success'?'green':'red';
-    messageDiv.textContent = data.message;
-    setTimeout(()=>{ messageDiv.textContent=""; },3000);
+  fetch(SCRIPT_URL, { method:'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+      messageDiv.style.color = (data.status==='success')?'green':'red';
+      messageDiv.textContent = data.message;
+      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
 
-    if(data.status==='success'){
-      form.reset();
-      updateTable(document.getElementById('departement').value);
-    }
-  })
-  .catch(err => {
-    messageDiv.style.color='red';
-    messageDiv.textContent='Erreur réseau ou serveur.';
-  });
+      if(data.status==='success'){
+        form.reset();
+        afficherTableau(depSelect.value);
+      }
+    })
+    .catch(err => {
+      messageDiv.style.color='red';
+      messageDiv.textContent='Erreur réseau ou serveur.';
+      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
+    });
 });
 
-// Fonction pour mettre à jour tableau et barre
-function updateTable(departement){
-  fetch(SCRIPT_URL + "?departement="+encodeURIComponent(departement))
-  .then(res => res.json())
-  .then(data => {
-    surveillancesData = data.surveillances || [];
-    tableBody.innerHTML = "";
-    let nbRemplis = 0;
+// Affichage tableau + barre + bouton export
+function afficherTableau(departement){
+  progressContainer.style.display='none';
+  tableDep.style.display='none';
+  exportBtn.style.display='none';
 
-    surveillancesData.forEach(s => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
-      tableBody.appendChild(tr);
-      nbRemplis++;
+  fetch(SCRIPT_URL+'?departement='+encodeURIComponent(departement))
+    .then(res=>res.json())
+    .then(data=>{
+      tbody.innerHTML="";
+      data.surveillances.forEach(s=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // Barre de progression
+      fetch(SCRIPT_URL)
+        .then(res=>res.json())
+        .then(depData=>{
+          const depInfo = depData.departements.find(d=>d.nom===departement);
+          const total = depInfo ? depInfo.nbEnseignants : 1;
+          const pct = Math.min(100, Math.round((data.surveillances.length/total)*100));
+          progressBar.style.width = pct+'%';
+          progressBar.textContent = pct+'%';
+          if(pct<50) progressBar.style.background="#f44336";
+          else if(pct<80) progressBar.style.background="#ff9800";
+          else if(pct<100) progressBar.style.background="#2196F3";
+          else progressBar.style.background="#4CAF50";
+
+          progressContainer.style.display='block';
+          tableDep.style.display='table';
+
+          // Si département complet, afficher bouton Export
+          if(data.surveillances.length >= total){
+            exportBtn.style.display='inline-block';
+          } else {
+            exportBtn.style.display='none';
+          }
+        });
     });
-
-    const depInfo = departementsData.find(d => d.nom===departement);
-    const total = depInfo?depInfo.nbEnseignants:1;
-    const pct = Math.min(100, Math.round((nbRemplis/total)*100));
-    progressBar.style.width = pct+"%";
-    progressBar.textContent = pct+"%";
-    progressContainer.style.display='block';
-    table.style.display='table';
-
-    if(pct<50) progressBar.style.background="#f44336";
-    else if(pct<80) progressBar.style.background="#ff9800";
-    else if(pct<100) progressBar.style.background="#2196F3";
-    else { progressBar.style.background="#4CAF50"; btnExport.style.display='inline-block'; }
-  });
 }
 
 // Export Excel
-btnExport.addEventListener('click', ()=>{
-  const wb = XLSX.utils.book_new();
-  const ws_data = [["Date de remplissage","Nom et prénom","Département","Jour choisi"]];
-  surveillancesData.forEach(s=>{
-    ws_data.push([s.date, s.nom, s.departement, s.jour]);
-  });
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  XLSX.utils.book_append_sheet(wb, ws, "Surveillances");
-  XLSX.writeFile(wb,"Surveillances_"+document.getElementById('departement').value+".xlsx");
-  btnExport.style.display='none';
+exportBtn.addEventListener('click', () => {
+  const wb = XLSX.utils.table_to_book(tableDep, {sheet:"Surveillances"});
+  XLSX.writeFile(wb, depSelect.value+"_surveillances.xlsx");
 });
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').then(()=>console.log('Service Worker enregistré !')).catch(err=>console.log('Erreur SW :',err));
+}
 </script>
+
+<!-- Inclure SheetJS pour export Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 </html>
