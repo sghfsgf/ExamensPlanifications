@@ -207,11 +207,21 @@ function afficherTableau(departement){
 }
 
 // Export Excel
-exportBtn.addEventListener('click', () => {
+exportBtn.style.display = "inline-block"; // rendre le bouton visible
+
+exportBtn.onclick = function() {
   const dep = depSelect.value;
-  if(!dep) return;
-  window.open(SCRIPT_URL+'?departement='+encodeURIComponent(dep)+'&export=excel','_blank');
-});
+  if (!dep) {
+    alert("Choisir un département");
+    return;
+  }
+
+  // Ouvre le fichier XLSX généré par le Apps Script
+  window.open(
+    SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep),
+    "_blank"
+  );
+};
 </script>
 
 </body>
