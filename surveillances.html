@@ -211,12 +211,10 @@ exportBtn.style.display = "inline-block"; // rendre le bouton visible
 
 exportBtn.onclick = function() {
   const dep = depSelect.value;
-  if (!dep) {
+  if(!dep){
     alert("Choisir un département");
     return;
   }
-
-  // Ouvre le fichier XLSX généré par le Apps Script
   window.open(
     SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep),
     "_blank"
