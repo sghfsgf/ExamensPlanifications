@@ -238,7 +238,49 @@ function afficherTableau(departement){
           <td>${s.jour}</td>
         </tr>`;
     });
+fetch(SCRIPT_URL)
+.then(res => res.json())
+.then(depData => {
 
+  const depInfo = depData.departements.find(d =>
+    d.nom.trim().toLowerCase() === departement.trim().toLowerCase()
+  );
+
+  const total = (depInfo && depInfo.nbEnseignants > 0)
+    ? depInfo.nbEnseignants
+    : 1;
+
+  const inscrits = data.surveillances ? data.surveillances.length : 0;
+
+  const pct = Math.min(100, Math.round((inscrits / total) * 100));
+
+  // 🔥 afficher barre
+  progressContainer.style.display = "block";
+  progressBar.style.width = pct + "%";
+  progressBar.textContent = pct + "%";
+
+  // 🎨 couleur
+  if (pct < 50) {
+    progressBar.style.background = "#f44336";
+  } else if (pct < 80) {
+    progressBar.style.background = "#ff9800";
+  } else if (pct < 100) {
+    progressBar.style.background = "#2196F3";
+  } else {
+    progressBar.style.background = "#4CAF50";
+  }
+
+  const restant = total - inscrits;
+
+  if (restant <= 0) {
+    restantDiv.textContent = "✅ Département complet";
+    restantDiv.style.color = "green";
+  } else {
+    restantDiv.textContent = "Enseignants restants : " + restant;
+    restantDiv.style.color = "black";
+  }
+
+});
   })
   .catch(() => {
     tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
