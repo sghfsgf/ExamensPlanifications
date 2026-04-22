@@ -104,7 +104,7 @@
 const messageDiv = document.getElementById('message');
 const depSelect = document.getElementById('departement');
 const jourSelect = document.getElementById('jour');
-
+const emailInput = document.getElementById('email'); 
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const restantDiv = document.getElementById('restant');
@@ -134,6 +134,10 @@ fetch(SCRIPT_URL)
   });
 
 });
+
+// 🔥 PARTIE 3 ICI
+emailInput.addEventListener('input', verifierEtAfficher);
+depSelect.addEventListener('change', verifierEtAfficher);
 
 
 // 🔹 Envoi formulaire
@@ -186,7 +190,19 @@ form.addEventListener('submit', e => {
   });
 
 });
+function verifierEtAfficher(){
 
+  const email = emailInput.value.trim();
+  const dep = depSelect.value;
+
+  if(!email || !dep){
+    return;
+  }
+
+  afficherTableau(dep);
+
+  resultats.scrollIntoView({ behavior: "smooth" });
+}
 
 // 🔹 Affichage tableau
 function afficherTableau(departement){
