@@ -46,6 +46,7 @@
 
 <main>
   <h1>Inscription à la surveillance</h1>
+
   <form id="formSurveillance">
     <label>Nom et Prénom</label>
     <input type="text" id="nomPrenom" required>
@@ -67,25 +68,30 @@
     <div id="message"></div>
   </form>
 
-  <div id="progressContainer">
-    <h1 class="titre-progression">Progression du département</h1>
-    <div id="progressBar">0%</div>
-    <div id="restant"></div>
+  <!-- 🔻 RESULTATS EN BAS -->
+  <div id="resultats" style="margin-top:40px;">
+
+    <div id="progressContainer">
+      <h1 class="titre-progression">Progression du département</h1>
+      <div id="progressBar">0%</div>
+      <div id="restant"></div>
+    </div>
+
+    <table id="tableDep">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Nom</th>
+          <th>Département</th>
+          <th>Jour</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="exportBtn">Exporter Excel</button>
+
   </div>
-
-  <table id="tableDep">
-    <thead>
-      <tr>
-        <th>Date de remplissage</th>
-        <th>Nom et prénom</th>
-        <th>Département</th>
-        <th>Jour choisi</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button id="exportBtn" style="display:none;">Exporter Excel</button>
 </main>
 
 <footer>
@@ -93,131 +99,171 @@
 </footer>
 
 <script>
-const form = document.getElementById('formSurveillance');
+
+  const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depSelect = document.getElementById('departement');
 const jourSelect = document.getElementById('jour');
+
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const restantDiv = document.getElementById('restant');
+
 const tableDep = document.getElementById('tableDep');
 const tbody = tableDep.querySelector('tbody');
 const exportBtn = document.getElementById('exportBtn');
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec'; // remplacer par ton URL
-// Charger départements et jours
+const resultats = document.getElementById('resultats');
+
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec';
+
+
+// 🔹 Charger données initiales
 fetch(SCRIPT_URL)
-  .then(res => res.json())
-  .then(data => {
-    depSelect.innerHTML = '<option value="">--Choisir--</option>';
-    data.departements.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.nom;
-      opt.textContent = d.nom;
-      depSelect.appendChild(opt);
-    });
-    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-    data.jours.forEach(j => {
-      const opt = document.createElement('option');
-      opt.value = j;
-      opt.textContent = j;
-      jourSelect.appendChild(opt);
-    });
+.then(res => res.json())
+.then(data => {
+
+  depSelect.innerHTML = '<option value="">--Choisir--</option>';
+  data.departements.forEach(d => {
+    depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
   });
 
-// Masquer tableau et barre quand changement département
-depSelect.addEventListener('change', () => {
-  afficherTableau(depSelect.value);
+  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+  data.jours.forEach(j => {
+    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
+  });
+
 });
 
-// Envoi du formulaire
+
+// 🔹 Envoi formulaire
 form.addEventListener('submit', e => {
   e.preventDefault();
+
+  if(!depSelect.value || !jourSelect.value){
+    messageDiv.textContent = "Veuillez remplir tous les champs";
+    messageDiv.style.color = "red";
+    return;
+  }
+
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
+
+  const depChoisi = depSelect.value;
 
   const formData = new FormData();
   formData.append('formType','surveillance');
   formData.append('nomPrenom', document.getElementById('nomPrenom').value);
   formData.append('email', document.getElementById('email').value);
-  formData.append('departement', depSelect.value);
+  formData.append('departement', depChoisi);
   formData.append('jour', jourSelect.value);
 
   fetch(SCRIPT_URL, { method:'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-      messageDiv.style.color = (data.status==='success')?'green':'red';
-      messageDiv.textContent = data.message;
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
+  .then(res => res.json())
+  .then(data => {
 
-      if(data.status==='success'){
-        form.reset();
-        afficherTableau(depSelect.value);
-      }
-    })
-    .catch(err => {
-      messageDiv.style.color='red';
-      messageDiv.textContent='Erreur réseau ou serveur.';
-      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
-    });
+    messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
+    messageDiv.textContent = data.message;
+
+    if(data.status === 'success'){
+
+      // ⚠️ reset intelligent (garde département)
+      document.getElementById('nomPrenom').value = "";
+      document.getElementById('email').value = "";
+      jourSelect.value = "";
+
+      afficherTableau(depChoisi);
+
+      // 🔻 Scroll vers résultats
+      resultats.scrollIntoView({ behavior: "smooth" });
+
+    }
+
+  })
+  .catch(() => {
+    messageDiv.textContent = "Erreur serveur";
+    messageDiv.style.color = "red";
+  });
+
 });
 
-// Affichage tableau + barre + restant
+
+// 🔹 Affichage tableau
 function afficherTableau(departement){
-  if(!departement) return;
-  progressContainer.style.display='none';
-  tableDep.style.display='none';
-  exportBtn.style.display='none';
 
-  fetch(SCRIPT_URL+'?departement='+encodeURIComponent(departement))
-    .then(res => res.json())
-    .then(data => {
-      tbody.innerHTML = "";
-      data.surveillances.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
-        tbody.appendChild(tr);
-      });
+  fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement))
+  .then(res => res.json())
+  .then(data => {
 
-      // Mettre à jour barre de progression et nombre restant
-      fetch(SCRIPT_URL)
-        .then(res => res.json())
-        .then(depData => {
-          const depInfo = depData.departements.find(d => d.nom === departement);
-          const total = depInfo ? depInfo.nbEnseignants : 1;
-          const inscrits = data.surveillances.length;
-          const restant = total - inscrits;
-          const pct = Math.min(100, Math.round((inscrits/total)*100));
+    tbody.innerHTML = "";
 
-          progressBar.style.width = pct+'%';
-          progressBar.textContent = pct+'%';
-          if(pct<50) progressBar.style.background="#f44336";
-          else if(pct<80) progressBar.style.background="#ff9800";
-          else if(pct<100) progressBar.style.background="#2196F3";
-          else progressBar.style.background="#4CAF50";
-
-          restantDiv.textContent = "Enseignants restants : " + restant;
-
-          progressContainer.style.display = 'block';
-          tableDep.style.display = 'table';
-          exportBtn.style.display = 'inline-block';
-        });
+    data.surveillances.forEach(s => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${new Date(s.date).toLocaleString()}</td>
+          <td>${s.nom}</td>
+          <td>${s.departement}</td>
+          <td>${s.jour}</td>
+        </tr>`;
     });
+
+    // 🔹 Progression
+    fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(depData => {
+
+      const depInfo = depData.departements.find(d => d.nom === departement);
+      const total = depInfo ? depInfo.nbEnseignants : 1;
+
+      const inscrits = data.surveillances.length;
+      const restant = total - inscrits;
+
+      const pct = Math.round((inscrits / total) * 100);
+
+      progressBar.style.width = pct + "%";
+      progressBar.textContent = pct + "%";
+
+      progressBar.style.background =
+        pct < 50 ? "#f44336" :
+        pct < 80 ? "#ff9800" :
+        pct < 100 ? "#2196F3" :
+        "#4CAF50";
+
+      // 🔥 message spécial si complet
+      if(restant <= 0){
+        restantDiv.textContent = "✅ Département complet";
+        restantDiv.style.color = "green";
+      } else {
+        restantDiv.textContent = "Enseignants restants : " + restant;
+        restantDiv.style.color = "black";
+      }
+
+      progressContainer.style.display = "block";
+      tableDep.style.display = "table";
+      exportBtn.style.display = "inline-block";
+
+    });
+
+  });
+
 }
 
-// Export Excel
-exportBtn.style.display = "inline-block"; // rendre le bouton visible
 
-exportBtn.onclick = function() {
+// 🔹 Export Excel
+exportBtn.onclick = function(){
+
   const dep = depSelect.value;
+
   if(!dep){
     alert("Choisir un département");
     return;
   }
+
   window.open(
     SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep),
     "_blank"
   );
+
 };
 </script>
 
