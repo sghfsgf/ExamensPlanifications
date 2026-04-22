@@ -241,10 +241,15 @@ exportBtn.onclick = function(){
     return;
   }
 
-  window.open(
-    SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep),
-    "_blank"
-  );
+  fetch(SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep))
+.then(res => res.json())
+.then(data => {
+  if(data.status === "success"){
+    window.open(data.url, "_blank");
+  } else {
+    alert("Erreur export");
+  }
+});
 
 };
 </script>
