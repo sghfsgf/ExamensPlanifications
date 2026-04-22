@@ -191,11 +191,27 @@ form.addEventListener('submit', e => {
 // 🔹 Affichage tableau
 function afficherTableau(departement){
 
+  if(!departement) return;
+
+  console.log("Département :", departement);
+
+  // 🔥 afficher immédiatement
+  progressContainer.style.display = "block";
+  tableDep.style.display = "table";
+  exportBtn.style.display = "inline-block";
+
   fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement))
   .then(res => res.json())
   .then(data => {
 
+    console.log("Réponse :", data);
+
     tbody.innerHTML = "";
+
+    if(!data.surveillances || data.surveillances.length === 0){
+      tbody.innerHTML = "<tr><td colspan='4'>Aucune donnée disponible</td></tr>";
+      return;
+    }
 
     data.surveillances.forEach(s => {
       tbody.innerHTML += `
@@ -207,43 +223,9 @@ function afficherTableau(departement){
         </tr>`;
     });
 
-    // 🔹 Progression
-    fetch(SCRIPT_URL)
-    .then(res => res.json())
-    .then(depData => {
-
-      const depInfo = depData.departements.find(d => d.nom === departement);
-      const total = depInfo ? depInfo.nbEnseignants : 1;
-
-      const inscrits = data.surveillances.length;
-      const restant = total - inscrits;
-
-      const pct = Math.round((inscrits / total) * 100);
-
-      progressBar.style.width = pct + "%";
-      progressBar.textContent = pct + "%";
-
-      progressBar.style.background =
-        pct < 50 ? "#f44336" :
-        pct < 80 ? "#ff9800" :
-        pct < 100 ? "#2196F3" :
-        "#4CAF50";
-
-      // 🔥 message spécial si complet
-      if(restant <= 0){
-        restantDiv.textContent = "✅ Département complet";
-        restantDiv.style.color = "green";
-      } else {
-        restantDiv.textContent = "Enseignants restants : " + restant;
-        restantDiv.style.color = "black";
-      }
-
-      progressContainer.style.display = "block";
-      tableDep.style.display = "table";
-      exportBtn.style.display = "inline-block";
-
-    });
-
+  })
+  .catch(() => {
+    tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
   });
 
 }
