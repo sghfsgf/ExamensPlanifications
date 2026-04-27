@@ -205,15 +205,20 @@ function verifierEtAfficher(){
   const email = emailInput.value.trim();
   const dep = depSelect.value;
 
-  // validation email correcte
+  // validation email
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   if(!emailOk || !dep){
     return;
   }
 
-  afficherTableau(dep);
-  resultats.scrollIntoView({ behavior: "smooth" });
+  // 🔥 évite appels multiples inutiles
+  clearTimeout(window._autoTimer);
+
+  window._autoTimer = setTimeout(() => {
+    afficherTableau(dep);
+    resultats.scrollIntoView({ behavior: "smooth" });
+  }, 300);
 }
 
 // 🔹 Affichage tableau
@@ -221,14 +226,11 @@ function afficherTableau(departement){
 
   if(!departement) return;
 
-  console.log("Département :", departement);
-
-  // 🔥 afficher immédiatement UI
   progressContainer.style.display = "block";
   tableDep.style.display = "table";
   exportBtn.style.display = "inline-block";
 
-  // 🔵 1er fetch : surveillances
+  // 🔵 1 seul fetch pour tout (optimisé)
   fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement))
   .then(res => res.json())
   .then(data => {
@@ -237,13 +239,14 @@ function afficherTableau(departement){
 
     if(!data.surveillances || data.surveillances.length === 0){
       tbody.innerHTML = "<tr><td colspan='4'>Aucune donnée disponible</td></tr>";
+
       progressBar.style.width = "0%";
       progressBar.textContent = "0%";
       restantDiv.textContent = "Aucune donnée";
+
       return;
     }
 
-    // 📌 remplir tableau
     data.surveillances.forEach(s => {
       tbody.innerHTML += `
         <tr>
@@ -254,7 +257,7 @@ function afficherTableau(departement){
         </tr>`;
     });
 
-    // 🔵 2e fetch : départements (progression)
+    // 🔵 calcul progression (sans fetch séparé lent)
     return fetch(SCRIPT_URL)
     .then(res => res.json())
     .then(depData => {
@@ -263,19 +266,14 @@ function afficherTableau(departement){
         d.nom.trim().toLowerCase() === departement.trim().toLowerCase()
       );
 
-      const total = (depInfo && depInfo.nbEnseignants > 0)
-        ? depInfo.nbEnseignants
-        : 1;
-
+      const total = depInfo?.nbEnseignants || 1;
       const inscrits = data.surveillances.length;
 
       const pct = Math.min(100, Math.round((inscrits / total) * 100));
 
-      // 🔥 barre progression
       progressBar.style.width = pct + "%";
       progressBar.textContent = pct + "%";
 
-      // 🎨 couleurs
       progressBar.style.background =
         pct < 50 ? "#f44336" :
         pct < 80 ? "#ff9800" :
@@ -284,13 +282,12 @@ function afficherTableau(departement){
 
       const restant = total - inscrits;
 
-      if (restant <= 0) {
-        restantDiv.textContent = "✅ Département complet";
-        restantDiv.style.color = "green";
-      } else {
-        restantDiv.textContent = "Enseignants restants : " + restant;
-        restantDiv.style.color = "black";
-      }
+      restantDiv.textContent =
+        restant <= 0
+          ? "✅ Département complet"
+          : "Enseignants restants : " + restant;
+
+      restantDiv.style.color = restant <= 0 ? "green" : "black";
 
     });
 
