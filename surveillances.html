@@ -100,6 +100,7 @@ Nom et Prenom: Prière de remplir en arabe
     </table>
 
     <button id="exportBtn">Exporter Excel</button>
+    <button id="exportPDFBtn">Exporter PDF</button>
 
   </div>
 </main>
@@ -331,6 +332,33 @@ exportBtn.onclick = function(){
     erreur.textContent = "";
   }
 }
+  const exportPDFBtn = document.getElementById("exportPDFBtn");
+
+exportPDFBtn.onclick = function(){
+
+  const dep = depSelect.value;
+
+  if(!dep){
+    alert("Choisir un département");
+    return;
+  }
+
+  fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
+  .then(res => res.json())
+  .then(data => {
+
+    if(data.status === "success"){
+      window.open(data.url, "_blank");
+    } else {
+      alert("Erreur PDF");
+    }
+
+  })
+  .catch(() => {
+    alert("Erreur serveur PDF");
+  });
+
+};
 </script>
 
 </body>
