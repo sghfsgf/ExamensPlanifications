@@ -243,9 +243,18 @@ function afficherTableau(departement){
 
     if(!data.surveillances || data.surveillances.length === 0){
       tbody.innerHTML = "<tr><td colspan='4'>Aucune donnée disponible</td></tr>";
+
+      // reset progression
+      progressBar.style.width = "0%";
+      progressBar.textContent = "0%";
+      restantDiv.textContent = "Aucune donnée";
+
       return;
     }
 
+    // =========================
+    // TABLEAU
+    // =========================
     data.surveillances.forEach(s => {
       tbody.innerHTML += `
         <tr>
@@ -254,6 +263,51 @@ function afficherTableau(departement){
           <td>${s.departement}</td>
           <td>${s.jour}</td>
         </tr>`;
+    });
+
+    // =========================
+    // PROGRESSION (AJOUT IMPORTANT)
+    // =========================
+    return fetch(SCRIPT_URL)
+    .then(res => res.json())
+    .then(depData => {
+
+      const list = depData.departements || [];
+
+      const depInfo = list.find(d =>
+        (d.nom || "").toString().trim().toLowerCase() ===
+        departement.toString().trim().toLowerCase()
+      );
+
+      const total = depInfo && depInfo.nbEnseignants
+        ? depInfo.nbEnseignants
+        : 1;
+
+      const inscrits = data.surveillances.length;
+
+      const pct = Math.min(100, Math.round((inscrits / total) * 100));
+
+      // barre progression
+      progressBar.style.width = pct + "%";
+      progressBar.textContent = pct + "%";
+
+      // couleur dynamique
+      progressBar.style.background =
+        pct < 50 ? "#f44336" :
+        pct < 80 ? "#ff9800" :
+        pct < 100 ? "#2196F3" :
+        "#4CAF50";
+
+      // restant
+      const restant = total - inscrits;
+
+      restantDiv.textContent =
+        restant <= 0
+          ? "✅ Département complet"
+          : "Enseignants restants : " + restant;
+
+      restantDiv.style.color = restant <= 0 ? "green" : "black";
+
     });
 
   })
