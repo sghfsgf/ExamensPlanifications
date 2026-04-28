@@ -99,8 +99,10 @@ Nom et Prenom: Prière de remplir en arabe
       <tbody></tbody>
     </table>
 
-    <button id="exportBtn">Exporter Excel</button>
-    <button id="exportPDFBtn">Exporter PDF</button>
+   
+   <button id="exportPDFBtn" style="background:red; color:white;">
+     Exporter PDF
+    </button>
 
   </div>
 </main>
@@ -300,26 +302,7 @@ function afficherTableau(departement){
 
 
 // 🔹 Export Excel
-exportBtn.onclick = function(){
 
-  const dep = depSelect.value;
-
-  if(!dep){
-    alert("Choisir un département");
-    return;
-  }
-
-  fetch(SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep))
-.then(res => res.json())
-.then(data => {
-  if(data.status === "success"){
-    window.open(data.url, "_blank");
-  } else {
-    alert("Erreur export");
-  }
-});
-
-};
   function verifierArabe() {
   const input = document.getElementById("nomPrenom");
   const erreur = document.getElementById("erreurNom");
