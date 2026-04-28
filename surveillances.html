@@ -124,7 +124,6 @@ const restantDiv = document.getElementById('restant');
 
 const tableDep = document.getElementById('tableDep');
 const tbody = tableDep.querySelector('tbody');
-const exportBtn = document.getElementById('exportBtn');
 
 const resultats = document.getElementById('resultats');
 
@@ -227,26 +226,23 @@ function verifierEtAfficher(){
 // 🔹 Affichage tableau
 function afficherTableau(departement){
 
+  console.log("appel afficherTableau:", departement);
+
   if(!departement) return;
 
   progressContainer.style.display = "block";
   tableDep.style.display = "table";
-  exportBtn.style.display = "inline-block";
 
-  // 🔵 1 seul fetch pour tout (optimisé)
   fetch(SCRIPT_URL + '?departement=' + encodeURIComponent(departement))
   .then(res => res.json())
   .then(data => {
+
+    console.log("DATA:", data);
 
     tbody.innerHTML = "";
 
     if(!data.surveillances || data.surveillances.length === 0){
       tbody.innerHTML = "<tr><td colspan='4'>Aucune donnée disponible</td></tr>";
-
-      progressBar.style.width = "0%";
-      progressBar.textContent = "0%";
-      restantDiv.textContent = "Aucune donnée";
-
       return;
     }
 
@@ -260,42 +256,9 @@ function afficherTableau(departement){
         </tr>`;
     });
 
-    // 🔵 calcul progression (sans fetch séparé lent)
-    return fetch(SCRIPT_URL)
-    .then(res => res.json())
-    .then(depData => {
-
-      const depInfo = depData.departements.find(d =>
-        d.nom.trim().toLowerCase() === departement.trim().toLowerCase()
-      );
-
-      const total = depInfo?.nbEnseignants || 1;
-      const inscrits = data.surveillances.length;
-
-      const pct = Math.min(100, Math.round((inscrits / total) * 100));
-
-      progressBar.style.width = pct + "%";
-      progressBar.textContent = pct + "%";
-
-      progressBar.style.background =
-        pct < 50 ? "#f44336" :
-        pct < 80 ? "#ff9800" :
-        pct < 100 ? "#2196F3" :
-        "#4CAF50";
-
-      const restant = total - inscrits;
-
-      restantDiv.textContent =
-        restant <= 0
-          ? "✅ Département complet"
-          : "Enseignants restants : " + restant;
-
-      restantDiv.style.color = restant <= 0 ? "green" : "black";
-
-    });
-
   })
-  .catch(() => {
+  .catch(err => {
+    console.log("ERREUR:", err);
     tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
   });
 }
