@@ -272,7 +272,15 @@ function afficherTableau(departement){
     // ❌ AUCUNE DONNÉE
     // =========================
     if(!data.surveillances || data.surveillances.length === 0){
+
       tbody.innerHTML = "<tr><td colspan='4'>Aucune donnée disponible</td></tr>";
+
+      // reset barre
+      progressBar.style.width = "0%";
+      progressBar.textContent = "0%";
+      progressBar.style.background = "#f44336";
+      restantDiv.textContent = "Restant : -";
+
       return;
     }
 
@@ -289,6 +297,46 @@ function afficherTableau(departement){
         </tr>`;
     });
 
+    // =========================
+    // 🔥 PROGRESSION
+    // =========================
+    const inscrits = data.surveillances.length;
+
+    const depInfo = data.departements.find(d =>
+      d.nom.trim().toLowerCase() === departement.trim().toLowerCase()
+    );
+
+    if(!depInfo) return;
+
+    const total = depInfo.nbEnseignants || 1;
+
+    let pct = Math.round((inscrits / total) * 100);
+
+    if(pct > 100) pct = 100;
+
+    progressContainer.style.display = "block";
+
+    progressBar.style.width = pct + "%";
+    progressBar.textContent = pct + "%";
+
+    // =========================
+    // 🎨 COULEURS
+    // =========================
+    if(pct < 50){
+      progressBar.style.background = "#f44336"; // rouge
+    }
+    else if(pct < 80){
+      progressBar.style.background = "#ff9800"; // orange
+    }
+    else{
+      progressBar.style.background = "#4CAF50"; // vert
+    }
+
+    // =========================
+    // 🔢 RESTANT
+    // =========================
+    restantDiv.textContent = "Restant : " + (total - inscrits);
+
   })
   .catch(err => {
     console.log("ERREUR:", err);
@@ -297,6 +345,8 @@ function afficherTableau(departement){
 
     messageDiv.textContent = "Erreur serveur";
     messageDiv.style.color = "red";
+
+    progressContainer.style.display = "none";
   });
 }
 
