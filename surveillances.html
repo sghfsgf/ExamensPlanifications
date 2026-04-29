@@ -287,15 +287,19 @@ function afficherTableau(departement){
     // =========================
     // ✅ AFFICHAGE TABLEAU
     // =========================
-    data.surveillances.forEach(s => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.nom}</td>
-          <td>${s.departement}</td>
-          <td>${s.jour}</td>
-        </tr>`;
-    });
+    let html = "";
+
+data.surveillances.forEach(s => {
+  html += `
+    <tr>
+      <td>${new Date(s.date).toLocaleString()}</td>
+      <td>${s.nom}</td>
+      <td>${s.departement}</td>
+      <td>${s.jour}</td>
+    </tr>`;
+});
+
+tbody.innerHTML = html;
 
    const inscrits = data.surveillances.length;
 
