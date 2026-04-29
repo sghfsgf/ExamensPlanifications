@@ -297,27 +297,28 @@ function afficherTableau(departement){
         </tr>`;
     });
 
-    // =========================
-    // 🔥 PROGRESSION
-    // =========================
-    const inscrits = data.surveillances.length;
+   const inscrits = data.surveillances.length;
 
-    const depInfo = data.departements.find(d =>
-      d.nom.trim().toLowerCase() === departement.trim().toLowerCase()
-    );
+// 🔥 sécurité (évite crash si departements manquant)
+const depInfo = (data.departements || []).find(d =>
+  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+);
 
-    if(!depInfo) return;
+if(!depInfo){
+  console.log("Département introuvable dans data.departements");
+  return;
+}
 
-    const total = depInfo.nbEnseignants || 1;
+const total = depInfo.nbEnseignants || 1;
 
-    let pct = Math.round((inscrits / total) * 100);
+let pct = Math.round((inscrits / total) * 100);
 
-    if(pct > 100) pct = 100;
+if(pct > 100) pct = 100;
 
-    progressContainer.style.display = "block";
+progressContainer.style.display = "block";
 
-    progressBar.style.width = pct + "%";
-    progressBar.textContent = pct + "%";
+progressBar.style.width = pct + "%";
+progressBar.textContent = pct + "%";
 
     // =========================
     // 🎨 COULEURS
