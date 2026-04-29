@@ -288,7 +288,15 @@ function afficherTableau(departement){
           <td>${s.jour}</td>
         </tr>`;
     });
-
+data.surveillances.forEach(s => {
+  tbody.innerHTML += `
+    <tr>
+      <td>${new Date(s.date).toLocaleString()}</td>
+      <td>${s.nom}</td>
+      <td>${s.departement}</td>
+      <td>${s.jour}</td>
+    </tr>`;
+});
   })
   .catch(err => {
     console.log("ERREUR:", err);
