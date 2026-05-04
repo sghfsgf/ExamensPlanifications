@@ -142,13 +142,13 @@ fetch(SCRIPT_URL)
 
   depSelect.innerHTML = '<option value="">--Choisir--</option>';
   data.departements.forEach(d => {
-    depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
-  });
+  depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
+});
 
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.jours.forEach(j => {
-    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
-  });
+jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+data.jours.forEach(j => {
+  jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
+});
 
 })
 .catch(err => {
@@ -344,14 +344,7 @@ function afficherTableau(departement){
 }
  
 
-  // 🔥 évite appels multiples inutiles
-  clearTimeout(window._autoTimer);
 
-  window._autoTimer = setTimeout(() => {
-    afficherTableau(dep);
-    resultats.scrollIntoView({ behavior: "smooth" });
-  }, 300);
-}
 
 // 🔹 Affichage tableau
 
