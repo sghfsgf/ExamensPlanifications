@@ -289,6 +289,7 @@ function afficherTableau(departement){
 
       tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
 
+      // reset barre
       progressBar.style.width = "0%";
       progressBar.textContent = "0%";
       progressBar.style.background = "#f44336";
@@ -302,62 +303,52 @@ function afficherTableau(departement){
     // =========================
     let html = "";
 
-    data.surveillances.forEach(s => {
-      html += `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.nom}</td>
-          <td>${s.departement}</td>
-          <td>${s.jour}</td>
-        </tr>`;
-    });
+data.surveillances.forEach(s => {
+  html += `
+    <tr>
+      <td>${new Date(s.date).toLocaleString()}</td>
+      <td>${s.nom}</td>
+      <td>${s.departement}</td>
+      <td>${s.jour}</td>
+    </tr>`;
+});
 
-    tbody.innerHTML = html;
+tbody.innerHTML = html;
 
-    const inscrits = data.surveillances.length;
+   const inscrits = data.surveillances.length;
 
-    const depInfo = (data.departements || []).find(d =>
-      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-    );
+// 🔥 sécurité (évite crash si departements manquant)
+const depInfo = (data.departements || []).find(d =>
+  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+);
 
-    if(!depInfo){
-      console.log("Département introuvable");
-      return;
-    }
+if(!depInfo){
+  console.log("Département introuvable dans data.departements");
+  return;
+}
 
-    const total = depInfo.nbEnseignants || 1;
+const total = depInfo.nbEnseignants || 1;
 
-    let pct = Math.round((inscrits / total) * 100);
+let pct = Math.round((inscrits / total) * 100);
 
-    if(pct > 100) pct = 100;
+if(pct > 100) pct = 100;
 
-    progressContainer.style.display = "block";
+progressContainer.style.display = "block";
 
-    progressBar.style.width = pct + "%";
-    progressBar.textContent = pct + "%";
-
-    // 🔵 NOUVEAU CODE ICI
-    const titre = document.getElementById("titreProgression");
-
-    if(pct === 100){
-      titre.textContent = "📊 Tableau complet des choix";
-      titre.style.color = "green";
-    } else {
-      titre.textContent = "Progression du département";
-      titre.style.color = "black";
-    }
+progressBar.style.width = pct + "%";
+progressBar.textContent = pct + "%";
 
     // =========================
     // 🎨 COULEURS
     // =========================
     if(pct < 50){
-      progressBar.style.background = "#f44336";
+      progressBar.style.background = "#f44336"; // rouge
     }
     else if(pct < 80){
-      progressBar.style.background = "#ff9800";
+      progressBar.style.background = "#ff9800"; // orange
     }
     else{
-      progressBar.style.background = "#4CAF50";
+      progressBar.style.background = "#4CAF50"; // vert
     }
 
     // =========================
