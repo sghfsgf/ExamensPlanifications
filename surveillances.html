@@ -134,7 +134,10 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3Y
 
 // 🔹 Charger données initiales
 fetch(SCRIPT_URL)
-.then(res => res.json())
+.then(res => {
+  if (!res.ok) throw new Error("HTTP error " + res.status);
+  return res.json();
+})
 .then(data => {
 
   depSelect.innerHTML = '<option value="">--Choisir--</option>';
@@ -147,6 +150,11 @@ fetch(SCRIPT_URL)
     jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
   });
 
+})
+.catch(err => {
+  console.log("Erreur chargement:", err);
+  depSelect.innerHTML = '<option>Erreur chargement</option>';
+  jourSelect.innerHTML = '<option>Erreur chargement</option>';
 });
 
 // 🔥 PARTIE 3 ICI
