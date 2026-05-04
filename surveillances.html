@@ -133,7 +133,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3Y
 
 
 // 🔹 Charger données initiales
-fetch(SCRIPT_URL)
+fetch(SCRIPT_URL)const inscrits = data.surveillances.length;
 .then(res => res.json())
 .then(data => {
 
@@ -317,23 +317,24 @@ function afficherTableau(departement){
     // =========================
     // 📊 CALCULS
     // =========================
-    const inscrits = data.surveillances.length;
+   const inscrits = data.surveillances.length;
 
-    const depInfo = (data.departements || []).find(d =>
-      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-    );
+const depInfo = (data.departements || []).find(d =>
+  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+);
 
-    if(!depInfo){
-      console.log("Département introuvable");
-      return;
-    }
+if(!depInfo){
+  console.log("Département introuvable");
+  return;
+}
 
-    const total = depInfo.nbEnseignants || 1;
+const total = depInfo.nbEnseignants || 1;
 
-    let pct = Math.round((inscrits / total) * 100);
+const restant = total - inscrits;
 
-    if(pct > 100) pct = 100;
+let pct = Math.round((inscrits / total) * 100);
 
+if(pct > 100) pct = 100;
     // =========================
     // 📊 PROGRESSION
     // =========================
@@ -358,14 +359,7 @@ function afficherTableau(departement){
     // =========================
     // 💬 MESSAGE FINAL (CORRIGÉ)
     // =========================
-    if(pct === 100){
-      messageDiv.style.color = "green";
-      messageDiv.textContent = "📊 Tableau des choix est complet";
-    }
-    else{
-      messageDiv.style.color = "orange";
-      messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
-    }
+ 
 
   })
   .catch(err => {
