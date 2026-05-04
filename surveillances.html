@@ -12,7 +12,7 @@
     h1, .titre-tableau, .titre-progression { font-size:18px; font-weight:bold; margin-bottom:15px; }
 
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
-    input, select { padding:5px; width:300px; margin-top:5px; font-size:16px; }
+    input, select { padding:5px; width:250px; margin-top:5px; font-size:16px; }
     button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
     button:hover { background:#5a6b7a; }
     #message { margin-top:15px; font-weight:bold; font-size:14px; }
@@ -45,68 +45,47 @@
 </nav>
 
 <main>
-  <h1>Session Principale mai 2026: Inscription à la surveillance (y compris les vacataires)</h1>
-<form id="formSurveillance">
+  <h1>Inscription à la surveillance</h1>
+  <form id="formSurveillance">
+    <label>Nom et Prénom</label>
+    <input type="text" id="nomPrenom" required>
 
-  <label for="email">Email du chef de département</label>
-  <input type="email" id="email" required>
+    <label>Email du chef de département</label>
+    <input type="email" id="email" required>
 
-  <label for="departement">Département</label>
-  <select id="departement" required>
-    <option value="">Chargement...</option>
-  </select>
+    <label>Département</label>
+    <select id="departement" required>
+      <option value="">Chargement...</option>
+    </select>
 
-  <label for="nomPrenom">
-    Nom et Prenom: Prière de remplir en arabe
-  </label>
+    <label>Jour</label>
+    <select id="jour" required>
+      <option value="">Chargement...</option>
+    </select>
 
-  <input type="text"
-         id="nomPrenom"
-         required
-         pattern="[\u0600-\u06FF\s]+"
-         title="Veuillez écrire uniquement en arabe"
-         oninput="verifierArabe()">
+    <button type="submit">Envoyer</button>
+    <div id="message"></div>
+  </form>
 
-  <p id="erreurNom" style="color:red; font-size:14px;"></p>
-
-  <label for="jour">Jour</label>
-  <select id="jour" required style="width:300px;">
-    <option value="">Chargement...</option>
-  </select>
-
-  <button type="submit">Envoyer</button>
-
-  <div id="message"></div>
-
-</form>
-
-  <!-- 🔻 RESULTATS EN BAS -->
-  <div id="resultats" style="margin-top:40px;">
-
-    <div id="progressContainer">
-      <h1 class="titre-progression">Progression du département</h1>
-      <div id="progressBar">0%</div>
-      <div id="restant"></div>
-    </div>
-
-    <table id="tableDep">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Nom</th>
-          <th>Département</th>
-          <th>Jour</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-   
-   <button id="exportPDFBtn" style="background:red; color:white;">
-     Exporter PDF
-    </button>
-
+  <div id="progressContainer">
+    <h1 class="titre-progression">Progression du département</h1>
+    <div id="progressBar">0%</div>
+    <div id="restant"></div>
   </div>
+
+  <table id="tableDep">
+    <thead>
+      <tr>
+        <th>Date de remplissage</th>
+        <th>Nom et prénom</th>
+        <th>Département</th>
+        <th>Jour choisi</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="exportBtn" style="display:none;">Exporter Excel</button>
 </main>
 
 <footer>
@@ -114,287 +93,131 @@
 </footer>
 
 <script>
-
-  const form = document.getElementById('formSurveillance');
+const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depSelect = document.getElementById('departement');
 const jourSelect = document.getElementById('jour');
-const emailInput = document.getElementById('email'); 
 const progressContainer = document.getElementById('progressContainer');
 const progressBar = document.getElementById('progressBar');
 const restantDiv = document.getElementById('restant');
-
 const tableDep = document.getElementById('tableDep');
 const tbody = tableDep.querySelector('tbody');
+const exportBtn = document.getElementById('exportBtn');
 
-const resultats = document.getElementById('resultats');
-
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec';
-
-
-// 🔹 Charger données initiales
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec'; // remplacer par ton URL
+// Charger départements et jours
 fetch(SCRIPT_URL)
-.then(res => {
-  if (!res.ok) throw new Error("HTTP error " + res.status);
-  return res.json();
-})
-.then(data => {
-
-  console.log("DATA REÇUE =", data); // debug
-
-  depSelect.innerHTML = '<option value="">--Choisir--</option>';
-
-  (data.departements || []).forEach(d => {
-    depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
+  .then(res => res.json())
+  .then(data => {
+    depSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.departements.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.nom;
+      opt.textContent = d.nom;
+      depSelect.appendChild(opt);
+    });
+    jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+    data.jours.forEach(j => {
+      const opt = document.createElement('option');
+      opt.value = j;
+      opt.textContent = j;
+      jourSelect.appendChild(opt);
+    });
   });
 
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-
-  (data.jours || []).forEach(j => {
-    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
-  });
-
-})
-.catch(err => {
-  console.log("Erreur chargement:", err);
-
-  depSelect.innerHTML = '<option value="">Erreur chargement</option>';
-  jourSelect.innerHTML = '<option value="">Erreur chargement</option>';
+// Masquer tableau et barre quand changement département
+depSelect.addEventListener('change', () => {
+  afficherTableau(depSelect.value);
 });
 
-// 🔥 PARTIE 3 ICI
-emailInput.addEventListener('blur', verifierEtAfficher);
-depSelect.addEventListener('change', verifierEtAfficher);
-
-
-// 🔹 Envoi formulaire
+// Envoi du formulaire
 form.addEventListener('submit', e => {
   e.preventDefault();
-
-  if(!depSelect.value || !jourSelect.value){
-    messageDiv.textContent = "Veuillez remplir tous les champs";
-    messageDiv.style.color = "red";
-    return;
-  }
-
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
-
-  const depChoisi = depSelect.value;
 
   const formData = new FormData();
   formData.append('formType','surveillance');
   formData.append('nomPrenom', document.getElementById('nomPrenom').value);
   formData.append('email', document.getElementById('email').value);
-  formData.append('departement', depChoisi);
+  formData.append('departement', depSelect.value);
   formData.append('jour', jourSelect.value);
 
   fetch(SCRIPT_URL, { method:'POST', body: formData })
-  .then(res => res.json())
-  .then(data => {
+    .then(res => res.json())
+    .then(data => {
+      messageDiv.style.color = (data.status==='success')?'green':'red';
+      messageDiv.textContent = data.message;
+      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
 
-    messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
-    messageDiv.textContent = data.message;
-
-   if(data.status === 'success'){
-
-  // ⚠️ reset intelligent (garde département)
-  document.getElementById('nomPrenom').value = "";
-  document.getElementById('email').value = "";
-  jourSelect.value = "";
-
-  afficherTableau(depChoisi);
-
-  // 🔻 Scroll vers résultats
-  resultats.scrollIntoView({ behavior: "smooth" });
-
-  // ⏳ petit délai pour meilleure UX
-  setTimeout(() => {
-
-    messageDiv.style.color = "white";
-    messageDiv.style.background = "#4CAF50";
-    messageDiv.style.padding = "10px";
-    messageDiv.style.borderRadius = "5px";
-
-    messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
-
-  }, 300);
-
-}
-
-  })
-  .catch(() => {
-    messageDiv.textContent = "Erreur serveur";
-    messageDiv.style.color = "red";
-  });
-
-});
-function verifierEtAfficher(){
-
-  const email = emailInput.value.trim();
-  const dep = depSelect.value;
-
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  if(!emailOk || !dep){
-    return;
-  }
-
-  clearTimeout(window._autoTimer);
-
-  window._autoTimer = setTimeout(() => {
-    afficherTableau(dep);
-    resultats.scrollIntoView({ behavior: "smooth" });
-  }, 300);
-}// ✅ FIN OBLIGATOIRE
-function afficherTableau(departement){
-
-  console.log("appel afficherTableau:", departement);
-
-  if(!departement) return;
-
-  const email = emailInput.value.trim();
-
-  messageDiv.textContent = "";
-
-  if(!email){
-    messageDiv.textContent = "Veuillez saisir l'email du chef";
-    messageDiv.style.color = "red";
-    return;
-  }
-
-  progressContainer.style.display = "block";
-  tableDep.style.display = "table";
-
-  fetch(SCRIPT_URL
-    + '?departement=' + encodeURIComponent(departement)
-    + '&email=' + encodeURIComponent(email)
-  )
-  .then(res => res.json())
-  .then(data => {
-
-    tbody.innerHTML = "";
-
-    if(data.status === "error" && data.message === "email_dep_error"){
-
-      tableDep.style.display = "none";
-      progressContainer.style.display = "none";
-
-      messageDiv.textContent = "❌ L’adresse ne correspond pas au département";
-      messageDiv.style.color = "red";
-
-      return;
-    }
-
-    if(!data.surveillances || data.surveillances.length === 0){
-
-      tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
-
-      progressBar.style.width = "0%";
-      progressBar.textContent = "0%";
-      progressBar.style.background = "#f44336";
-      restantDiv.textContent = "Restant : -";
-
-      return;
-    }
-
-    let html = "";
-
-    data.surveillances.forEach(s => {
-      html += `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.nom}</td>
-          <td>${s.departement}</td>
-          <td>${s.jour}</td>
-        </tr>`;
+      if(data.status==='success'){
+        form.reset();
+        afficherTableau(depSelect.value);
+      }
+    })
+    .catch(err => {
+      messageDiv.style.color='red';
+      messageDiv.textContent='Erreur réseau ou serveur.';
+      setTimeout(()=>{ messageDiv.textContent=""; }, 3000);
     });
+});
 
-    tbody.innerHTML = html;
+// Affichage tableau + barre + restant
+function afficherTableau(departement){
+  if(!departement) return;
+  progressContainer.style.display='none';
+  tableDep.style.display='none';
+  exportBtn.style.display='none';
 
-    const inscrits = data.surveillances.length;
+  fetch(SCRIPT_URL+'?departement='+encodeURIComponent(departement))
+    .then(res => res.json())
+    .then(data => {
+      tbody.innerHTML = "";
+      data.surveillances.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${new Date(s.date).toLocaleString()}</td><td>${s.nom}</td><td>${s.departement}</td><td>${s.jour}</td>`;
+        tbody.appendChild(tr);
+      });
 
-    const depInfo = (data.departements || []).find(d =>
-      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-    );
+      // Mettre à jour barre de progression et nombre restant
+      fetch(SCRIPT_URL)
+        .then(res => res.json())
+        .then(depData => {
+          const depInfo = depData.departements.find(d => d.nom === departement);
+          const total = depInfo ? depInfo.nbEnseignants : 1;
+          const inscrits = data.surveillances.length;
+          const restant = total - inscrits;
+          const pct = Math.min(100, Math.round((inscrits/total)*100));
 
-    if(!depInfo) return;
+          progressBar.style.width = pct+'%';
+          progressBar.textContent = pct+'%';
+          if(pct<50) progressBar.style.background="#f44336";
+          else if(pct<80) progressBar.style.background="#ff9800";
+          else if(pct<100) progressBar.style.background="#2196F3";
+          else progressBar.style.background="#4CAF50";
 
-    const total = depInfo.nbEnseignants || 1;
+          restantDiv.textContent = "Enseignants restants : " + restant;
 
-    let pct = Math.round((inscrits / total) * 100);
-    if(pct > 100) pct = 100;
-
-    progressBar.style.width = pct + "%";
-    progressBar.textContent = pct + "%";
-
-    if(pct < 50){
-      progressBar.style.background = "#f44336";
-    }
-    else if(pct < 80){
-      progressBar.style.background = "#ff9800";
-    }
-    else{
-      progressBar.style.background = "#4CAF50";
-    }
-
-    restantDiv.textContent = "Restant : " + (total - inscrits);
-
-  })
-  .catch(err => {
-    console.log("ERREUR:", err);
-    messageDiv.textContent = "Erreur serveur";
-    messageDiv.style.color = "red";
-  });
+          progressContainer.style.display = 'block';
+          tableDep.style.display = 'table';
+          exportBtn.style.display = 'inline-block';
+        });
+    });
 }
- 
 
+// Export Excel
+exportBtn.style.display = "inline-block"; // rendre le bouton visible
 
-
-// 🔹 Affichage tableau
-
-
-
-// 🔹 Export Excel
-
-  function verifierArabe() {
-  const input = document.getElementById("nomPrenom");
-  const erreur = document.getElementById("erreurNom");
-
-  const regex = /^[\u0600-\u06FF\s]+$/;
-
-  if (!regex.test(input.value)) {
-    erreur.textContent = "⚠️ Veuillez écrire en arabe uniquement";
-  } else {
-    erreur.textContent = "";
-  }
-}
-  const exportPDFBtn = document.getElementById("exportPDFBtn");
-
-exportPDFBtn.onclick = function(){
-
+exportBtn.onclick = function() {
   const dep = depSelect.value;
-
   if(!dep){
     alert("Choisir un département");
     return;
   }
-
-  fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
-  .then(res => res.json())
-  .then(data => {
-
-    if(data.status === "success"){
-      window.open(data.url, "_blank");
-    } else {
-      alert("Erreur PDF");
-    }
-
-  })
-  .catch(() => {
-    alert("Erreur serveur PDF");
-  });
-
+  window.open(
+    SCRIPT_URL + "?export=excel&departement=" + encodeURIComponent(dep),
+    "_blank"
+  );
 };
 </script>
 
