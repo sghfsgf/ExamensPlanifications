@@ -3,35 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <title>Surveillances - SGH Planification</title>
+
   <style>
     body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
     nav { background:#5F9EA0; padding:10px; }
     nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
     nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
     main { padding:20px; }
-    h1, .titre-tableau, .titre-progression { font-size:18px; font-weight:bold; margin-bottom:15px; }
+
+    h1 { font-size:18px; font-weight:bold; margin-bottom:15px; }
 
     label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
     input, select { padding:5px; width:300px; margin-top:5px; font-size:16px; }
-    button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
+
+    button {
+      margin-top:15px;
+      padding:8px 15px;
+      background:#778899;
+      color:white;
+      border:none;
+      cursor:pointer;
+      font-weight:bold;
+      font-size:16px;
+      border-radius:4px;
+    }
+
     button:hover { background:#5a6b7a; }
+
     #message { margin-top:15px; font-weight:bold; font-size:14px; }
 
-    /* Barre de progression */
-    #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; padding:10px; border-radius:4px; }
-    #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; border-radius:4px; }
+    #progressContainer {
+      width:100%;
+      background:#ddd;
+      margin-top:10px;
+      display:none;
+      padding:10px;
+      border-radius:4px;
+    }
+
+    #progressBar {
+      width:0%;
+      height:25px;
+      text-align:center;
+      color:white;
+      line-height:25px;
+      font-weight:bold;
+      transition: width 0.5s ease, background-color 0.5s ease;
+      border-radius:4px;
+    }
+
     #restant { margin-top:5px; font-weight:bold; }
 
-    table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
+    table {
+      width:100%;
+      border-collapse: collapse;
+      margin-top:10px;
+      display:none;
+    }
+
     table, th, td { border:1px solid #888; }
     th, td { padding:8px; text-align:left; }
 
-    #exportBtn { background:#4CAF50; margin-top:10px; }
-    #exportBtn:hover { background:#45a049; }
-
-    footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
+    footer {
+      background:#FF8C00;
+      color:white;
+      text-align:center;
+      padding:15px;
+      margin-top:30px;
+      font-weight:bold;
+    }
   </style>
 </head>
+
 <body>
 
 <nav>
@@ -45,32 +88,24 @@
 </nav>
 
 <main>
-  <h1>Session Principale mai 2026: Inscription à la surveillance (y compris les vacataires)</h1>
+
+<h1>Session Principale mai 2026</h1>
+
 <form id="formSurveillance">
 
-  <label for="email">Email du chef de département</label>
+  <label>Email du chef de département</label>
   <input type="email" id="email" required>
 
-  <label for="departement">Département</label>
+  <label>Département</label>
   <select id="departement" required>
     <option value="">Chargement...</option>
   </select>
 
-  <label for="nomPrenom">
-    Nom et Prenom: Prière de remplir en arabe
-  </label>
+  <label>Nom et Prenom (arabe)</label>
+  <input type="text" id="nomPrenom" required oninput="verifierArabe()">
 
-  <input type="text"
-         id="nomPrenom"
-         required
-         pattern="[\u0600-\u06FF\s]+"
-         title="Veuillez écrire uniquement en arabe"
-         oninput="verifierArabe()">
-
-  <p id="erreurNom" style="color:red; font-size:14px;"></p>
-
-  <label for="jour">Jour</label>
-  <select id="jour" required style="width:300px;">
+  <label>Jour</label>
+  <select id="jour" required>
     <option value="">Chargement...</option>
   </select>
 
@@ -80,337 +115,154 @@
 
 </form>
 
-  <!-- 🔻 RESULTATS EN BAS -->
-  <div id="resultats" style="margin-top:40px;">
+<div id="progressContainer">
+  <h3>Progression du département</h3>
+  <div id="progressBar">0%</div>
+  <div id="restant"></div>
+</div>
 
-    <div id="progressContainer">
-      <h1 class="titre-progression">Progression du département</h1>
-      <div id="progressBar">0%</div>
-      <div id="restant"></div>
-    </div>
+<table id="tableDep">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Nom</th>
+      <th>Département</th>
+      <th>Jour</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-    <table id="tableDep">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Nom</th>
-          <th>Département</th>
-          <th>Jour</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-
-   
-   <button id="exportPDFBtn" style="background:red; color:white;">
-     Exporter PDF
-    </button>
-
-  </div>
 </main>
 
 <footer>
-  &copy; 2026 SGH pour Planification et Programmation
+  &copy; 2026 SGH
 </footer>
 
 <script>
 
-  const form = document.getElementById('formSurveillance');
-const messageDiv = document.getElementById('message');
-const depSelect = document.getElementById('departement');
-const jourSelect = document.getElementById('jour');
-const emailInput = document.getElementById('email'); 
-const progressContainer = document.getElementById('progressContainer');
-const progressBar = document.getElementById('progressBar');
-const restantDiv = document.getElementById('restant');
-
-const tableDep = document.getElementById('tableDep');
-const tbody = tableDep.querySelector('tbody');
-
-const resultats = document.getElementById('resultats');
-
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec';
 
+const emailInput = document.getElementById("email");
+const depSelect = document.getElementById("departement");
+const jourSelect = document.getElementById("jour");
+const messageDiv = document.getElementById("message");
+const progressBar = document.getElementById("progressBar");
+const progressContainer = document.getElementById("progressContainer");
+const restantDiv = document.getElementById("restant");
+const tableDep = document.getElementById("tableDep");
+const tbody = tableDep.querySelector("tbody");
 
-// 🔹 Charger données initiales
-fetch(SCRIPT_URL)const inscrits = data.surveillances.length;
+/* =========================
+   🔹 CHARGEMENT DATA FIX
+========================= */
+fetch(SCRIPT_URL)
 .then(res => res.json())
 .then(data => {
 
+  const deps = data.departements || [];
+  const jours = data.jours || [];
+
   depSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.departements.forEach(d => {
+  deps.forEach(d => {
     depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
   });
 
   jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  data.jours.forEach(j => {
+  jours.forEach(j => {
     jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
   });
 
+})
+.catch(() => {
+  depSelect.innerHTML = "<option>Erreur</option>";
+  jourSelect.innerHTML = "<option>Erreur</option>";
 });
 
-// 🔥 PARTIE 3 ICI
-emailInput.addEventListener('blur', verifierEtAfficher);
-depSelect.addEventListener('change', verifierEtAfficher);
-
-
-// 🔹 Envoi formulaire
-form.addEventListener('submit', e => {
+/* =========================
+   🔹 FORM SUBMIT
+========================= */
+document.getElementById("formSurveillance").addEventListener("submit", e => {
   e.preventDefault();
-
-  if(!depSelect.value || !jourSelect.value){
-    messageDiv.textContent = "Veuillez remplir tous les champs";
-    messageDiv.style.color = "red";
-    return;
-  }
 
   messageDiv.textContent = "Envoi en cours...";
   messageDiv.style.color = "black";
 
-  const depChoisi = depSelect.value;
-
   const formData = new FormData();
-  formData.append('formType','surveillance');
-  formData.append('nomPrenom', document.getElementById('nomPrenom').value);
-  formData.append('email', document.getElementById('email').value);
-  formData.append('departement', depChoisi);
-  formData.append('jour', jourSelect.value);
+  formData.append("email", emailInput.value);
+  formData.append("departement", depSelect.value);
+  formData.append("nomPrenom", document.getElementById("nomPrenom").value);
+  formData.append("jour", jourSelect.value);
 
-  fetch(SCRIPT_URL, { method:'POST', body: formData })
-  .then(res => res.json())
-  .then(data => {
-
-    messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
-    messageDiv.textContent = data.message;
-
-   if(data.status === 'success'){
-
-  // ⚠️ reset intelligent (garde département)
-  document.getElementById('nomPrenom').value = "";
-  document.getElementById('email').value = "";
-  jourSelect.value = "";
-
-  afficherTableau(depChoisi);
-
-  // 🔻 Scroll vers résultats
-  resultats.scrollIntoView({ behavior: "smooth" });
-
-  // ⏳ petit délai pour meilleure UX
-  setTimeout(() => {
-
-    messageDiv.style.color = "white";
-    messageDiv.style.background = "#4CAF50";
-    messageDiv.style.padding = "10px";
-    messageDiv.style.borderRadius = "5px";
-
-    messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
-
-  }, 300);
-
-}
-
-  })
-  .catch(() => {
-    messageDiv.textContent = "Erreur serveur";
-    messageDiv.style.color = "red";
-  });
-
-});
-function verifierEtAfficher(){
-
-  const email = emailInput.value.trim();
-  const dep = depSelect.value;
-
-  // validation email
-  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  if(!emailOk || !dep){
-    return;
-  }
-
-  // 🔥 évite appels multiples inutiles
-  clearTimeout(window._autoTimer);
-
-  window._autoTimer = setTimeout(() => {
-    afficherTableau(dep);
-    resultats.scrollIntoView({ behavior: "smooth" });
-  }, 300);
-}
-
-// 🔹 Affichage tableau
-function afficherTableau(departement){
-
-  console.log("appel afficherTableau:", departement);
-
-  if(!departement) return;
-
-  const email = emailInput.value.trim();
-
-  messageDiv.textContent = "";
-
-  if(!email){
-    messageDiv.textContent = "Veuillez saisir l'email du chef";
-    messageDiv.style.color = "red";
-    return;
-  }
-
-  progressContainer.style.display = "block";
-  tableDep.style.display = "table";
-
-  fetch(SCRIPT_URL
-    + '?departement=' + encodeURIComponent(departement)
-    + '&email=' + encodeURIComponent(email)
-  )
-  .then(res => res.json())
-  .then(data => {
-
-    console.log("DATA:", data);
-
-    tbody.innerHTML = "";
-
-    // =========================
-    // ❌ ACCÈS REFUSÉ
-    // =========================
-    if(data.status === "error" && data.message === "email_dep_error"){
-
-      tableDep.style.display = "none";
-      progressContainer.style.display = "none";
-
-      messageDiv.textContent = "❌ L’adresse ne correspond pas au département";
-      messageDiv.style.color = "red";
-
-      return;
-    }
-
-    // =========================
-    // ❌ AUCUNE DONNÉE
-    // =========================
-    if(!data.surveillances || data.surveillances.length === 0){
-
-      tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
-
-      // reset barre
-      progressBar.style.width = "0%";
-      progressBar.textContent = "0%";
-      progressBar.style.background = "#f44336";
-      restantDiv.textContent = "Restant : -";
-
-      return;
-    }
-
-    // =========================
-    // ✅ AFFICHAGE TABLEAU
-    // =========================
-    let html = "";
-
-data.surveillances.forEach(s => {
-  html += `
-    <tr>
-      <td>${new Date(s.date).toLocaleString()}</td>
-      <td>${s.nom}</td>
-      <td>${s.departement}</td>
-      <td>${s.jour}</td>
-    </tr>`;
-});
-
-tbody.innerHTML = html;
-
-   const inscrits = data.surveillances.length;
-
-// 🔥 sécurité (évite crash si departements manquant)
-const depInfo = (data.departements || []).find(d =>
-  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-);
-
-if(!depInfo){
-  console.log("Département introuvable dans data.departements");
-  return;
-}
-
-const total = depInfo.nbEnseignants || 1;
-
-let pct = Math.round((inscrits / total) * 100);
-
-if(pct > 100) pct = 100;
-
-progressContainer.style.display = "block";
-
-progressBar.style.width = pct + "%";
-progressBar.textContent = pct + "%";
-
-    // =========================
-    // 🎨 COULEURS
-    // =========================
-    if(pct < 50){
-      progressBar.style.background = "#f44336"; // rouge
-    }
-    else if(pct < 80){
-      progressBar.style.background = "#ff9800"; // orange
-    }
-    else{
-      progressBar.style.background = "#4CAF50"; // vert
-    }
-
-    // =========================
-    // 🔢 RESTANT
-    // =========================
-    restantDiv.textContent = "Restant : " + (total - inscrits);
-
-  })
-  .catch(err => {
-    console.log("ERREUR:", err);
-
-    tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
-
-    messageDiv.textContent = "Erreur serveur";
-    messageDiv.style.color = "red";
-
-    progressContainer.style.display = "none";
-  });
-}
-
-
-// 🔹 Export Excel
-
-  function verifierArabe() {
-  const input = document.getElementById("nomPrenom");
-  const erreur = document.getElementById("erreurNom");
-
-  const regex = /^[\u0600-\u06FF\s]+$/;
-
-  if (!regex.test(input.value)) {
-    erreur.textContent = "⚠️ Veuillez écrire en arabe uniquement";
-  } else {
-    erreur.textContent = "";
-  }
-}
-  const exportPDFBtn = document.getElementById("exportPDFBtn");
-
-exportPDFBtn.onclick = function(){
-
-  const dep = depSelect.value;
-
-  if(!dep){
-    alert("Choisir un département");
-    return;
-  }
-
-  fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
-  .then(res => res.json())
+  fetch(SCRIPT_URL, { method:"POST", body: formData })
+  .then(r => r.json())
   .then(data => {
 
     if(data.status === "success"){
-      window.open(data.url, "_blank");
+      messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+      messageDiv.style.color = "green";
     } else {
-      alert("Erreur PDF");
+      messageDiv.textContent = "Erreur envoi";
+      messageDiv.style.color = "red";
     }
 
-  })
-  .catch(() => {
-    alert("Erreur serveur PDF");
   });
 
-};
+});
+
+/* =========================
+   🔹 TABLEAU
+========================= */
+function afficherTableau(departement){
+
+  const email = emailInput.value.trim();
+  if(!email) return;
+
+  fetch(SCRIPT_URL + "?departement=" + departement + "&email=" + email)
+  .then(r => r.json())
+  .then(data => {
+
+    tbody.innerHTML = "";
+
+    const inscrits = (data.surveillances || []).length;
+
+    const depInfo = (data.departements || []).find(d =>
+      d.nom === departement
+    );
+
+    if(!depInfo) return;
+
+    const total = depInfo.nbEnseignants || 1;
+    const restant = total - inscrits;
+
+    let pct = Math.round((inscrits / total) * 100);
+    if(pct > 100) pct = 100;
+
+    progressContainer.style.display = "block";
+    progressBar.style.width = pct + "%";
+    progressBar.textContent = pct + "%";
+
+    restantDiv.textContent = "Restant : " + restant;
+
+  });
+
+}
+
+/* =========================
+   🔹 ARABE CHECK
+========================= */
+function verifierArabe(){
+  const input = document.getElementById("nomPrenom");
+  const regex = /^[\u0600-\u06FF\s]+$/;
+
+  if(!regex.test(input.value)){
+    messageDiv.textContent = "Veuillez écrire en arabe";
+    messageDiv.style.color = "red";
+  } else {
+    messageDiv.textContent = "";
+  }
+}
+
 </script>
 
 </body>
