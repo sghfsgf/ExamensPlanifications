@@ -289,7 +289,6 @@ function afficherTableau(departement){
 
       tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
 
-      // reset barre
       progressBar.style.width = "0%";
       progressBar.textContent = "0%";
       progressBar.style.background = "#f44336";
@@ -303,60 +302,52 @@ function afficherTableau(departement){
     // =========================
     let html = "";
 
-data.surveillances.forEach(s => {
-  html += `
-    <tr>
-      <td>${new Date(s.date).toLocaleString()}</td>
-      <td>${s.nom}</td>
-      <td>${s.departement}</td>
-      <td>${s.jour}</td>
-    </tr>`;
-});
+    data.surveillances.forEach(s => {
+      html += `
+        <tr>
+          <td>${new Date(s.date).toLocaleString()}</td>
+          <td>${s.nom}</td>
+          <td>${s.departement}</td>
+          <td>${s.jour}</td>
+        </tr>`;
+    });
 
-tbody.innerHTML = html;
-
-   const inscrits = data.surveillances.length;
-
-// 🔥 sécurité (évite crash si departements manquant)
-const depInfo = (data.departements || []).find(d =>
-  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-);
-
-if(!depInfo){
-  console.log("Département introuvable dans data.departements");
-  return;
-}
-
-const total = depInfo.nbEnseignants || 1;
-
-let pct = Math.round((inscrits / total) * 100);
-    if(pct === 100){
-  messageDiv.style.color = "green";
-  messageDiv.textContent = "📊 Tableau des choix est complet";
-}
-else{
-  messageDiv.style.color = "orange";
-  messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
-}
-
-if(pct > 100) pct = 100;
-
-progressContainer.style.display = "block";
-
-progressBar.style.width = pct + "%";
-progressBar.textContent = pct + "%";
+    tbody.innerHTML = html;
 
     // =========================
-    // 🎨 COULEURS
+    // 📊 CALCULS
     // =========================
+    const inscrits = data.surveillances.length;
+
+    const depInfo = (data.departements || []).find(d =>
+      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+    );
+
+    if(!depInfo){
+      console.log("Département introuvable");
+      return;
+    }
+
+    const total = depInfo.nbEnseignants || 1;
+
+    let pct = Math.round((inscrits / total) * 100);
+
+    if(pct > 100) pct = 100;
+
+    // =========================
+    // 📊 PROGRESSION
+    // =========================
+    progressBar.style.width = pct + "%";
+    progressBar.textContent = pct + "%";
+
     if(pct < 50){
-      progressBar.style.background = "#f44336"; // rouge
+      progressBar.style.background = "#f44336";
     }
     else if(pct < 80){
-      progressBar.style.background = "#ff9800"; // orange
+      progressBar.style.background = "#ff9800";
     }
     else{
-      progressBar.style.background = "#4CAF50"; // vert
+      progressBar.style.background = "#4CAF50";
     }
 
     // =========================
@@ -364,8 +355,21 @@ progressBar.textContent = pct + "%";
     // =========================
     restantDiv.textContent = "Restant : " + (total - inscrits);
 
+    // =========================
+    // 💬 MESSAGE FINAL (CORRIGÉ)
+    // =========================
+    if(pct === 100){
+      messageDiv.style.color = "green";
+      messageDiv.textContent = "📊 Tableau des choix est complet";
+    }
+    else{
+      messageDiv.style.color = "orange";
+      messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
+    }
+
   })
   .catch(err => {
+
     console.log("ERREUR:", err);
 
     tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
