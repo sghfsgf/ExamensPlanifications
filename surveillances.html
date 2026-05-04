@@ -289,13 +289,11 @@ function afficherTableau(departement){
 
       tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
 
+      // reset barre
       progressBar.style.width = "0%";
       progressBar.textContent = "0%";
       progressBar.style.background = "#f44336";
       restantDiv.textContent = "Restant : -";
-
-      messageDiv.style.color = "orange";
-      messageDiv.textContent = "Aucune donnée disponible";
 
       return;
     }
@@ -305,76 +303,61 @@ function afficherTableau(departement){
     // =========================
     let html = "";
 
-    data.surveillances.forEach(s => {
-      html += `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.nom}</td>
-          <td>${s.departement}</td>
-          <td>${s.jour}</td>
-        </tr>`;
-    });
+data.surveillances.forEach(s => {
+  html += `
+    <tr>
+      <td>${new Date(s.date).toLocaleString()}</td>
+      <td>${s.nom}</td>
+      <td>${s.departement}</td>
+      <td>${s.jour}</td>
+    </tr>`;
+});
 
-    tbody.innerHTML = html;
+tbody.innerHTML = html;
+
+   const inscrits = data.surveillances.length;
+
+// 🔥 sécurité (évite crash si departements manquant)
+const depInfo = (data.departements || []).find(d =>
+  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+);
+
+if(!depInfo){
+  console.log("Département introuvable dans data.departements");
+  return;
+}
+
+const total = depInfo.nbEnseignants || 1;
+
+let pct = Math.round((inscrits / total) * 100);
+
+if(pct > 100) pct = 100;
+
+progressContainer.style.display = "block";
+
+progressBar.style.width = pct + "%";
+progressBar.textContent = pct + "%";
 
     // =========================
-    // 📊 CALCULS
+    // 🎨 COULEURS
     // =========================
-    const inscrits = data.surveillances.length;
-
-    const depInfo = (data.departements || []).find(d =>
-      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-    );
-
-    if(!depInfo){
-      console.log("Département introuvable");
-      return;
-    }
-
-    const total = depInfo.nbEnseignants || 1;
-
-    const restant = total - inscrits;
-
-    let pct = Math.round((inscrits / total) * 100);
-
-    if(pct > 100) pct = 100;
-
-    // =========================
-    // 📊 PROGRESSION
-    // =========================
-    progressBar.style.width = pct + "%";
-    progressBar.textContent = pct + "%";
-
     if(pct < 50){
-      progressBar.style.background = "#f44336";
+      progressBar.style.background = "#f44336"; // rouge
     }
     else if(pct < 80){
-      progressBar.style.background = "#ff9800";
+      progressBar.style.background = "#ff9800"; // orange
     }
     else{
-      progressBar.style.background = "#4CAF50";
+      progressBar.style.background = "#4CAF50"; // vert
     }
 
     // =========================
     // 🔢 RESTANT
     // =========================
-    restantDiv.textContent = "Restant : " + restant;
-
-    // =========================
-    // 💬 MESSAGE FINAL
-    // =========================
-    if(restant <= 0){
-      messageDiv.style.color = "orange";
-      messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
-    }
-    else{
-      messageDiv.style.color = "green";
-      messageDiv.textContent = "✔ Choix accepté pour ce jour";
-    }
+    restantDiv.textContent = "Restant : " + (total - inscrits);
 
   })
   .catch(err => {
-
     console.log("ERREUR:", err);
 
     tbody.innerHTML = "<tr><td colspan='4'>Erreur de chargement</td></tr>";
