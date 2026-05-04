@@ -294,6 +294,9 @@ function afficherTableau(departement){
       progressBar.style.background = "#f44336";
       restantDiv.textContent = "Restant : -";
 
+      messageDiv.style.color = "orange";
+      messageDiv.textContent = "Aucune donnée disponible";
+
       return;
     }
 
@@ -317,24 +320,25 @@ function afficherTableau(departement){
     // =========================
     // 📊 CALCULS
     // =========================
-   const inscrits = data.surveillances.length;
+    const inscrits = data.surveillances.length;
 
-const depInfo = (data.departements || []).find(d =>
-  (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
-);
+    const depInfo = (data.departements || []).find(d =>
+      (d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+    );
 
-if(!depInfo){
-  console.log("Département introuvable");
-  return;
-}
+    if(!depInfo){
+      console.log("Département introuvable");
+      return;
+    }
 
-const total = depInfo.nbEnseignants || 1;
+    const total = depInfo.nbEnseignants || 1;
 
-const restant = total - inscrits;
+    const restant = total - inscrits;
 
-let pct = Math.round((inscrits / total) * 100);
+    let pct = Math.round((inscrits / total) * 100);
 
-if(pct > 100) pct = 100;
+    if(pct > 100) pct = 100;
+
     // =========================
     // 📊 PROGRESSION
     // =========================
@@ -354,12 +358,19 @@ if(pct > 100) pct = 100;
     // =========================
     // 🔢 RESTANT
     // =========================
-    restantDiv.textContent = "Restant : " + (total - inscrits);
+    restantDiv.textContent = "Restant : " + restant;
 
     // =========================
-    // 💬 MESSAGE FINAL (CORRIGÉ)
+    // 💬 MESSAGE FINAL
     // =========================
- 
+    if(restant <= 0){
+      messageDiv.style.color = "orange";
+      messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
+    }
+    else{
+      messageDiv.style.color = "green";
+      messageDiv.textContent = "✔ Choix accepté pour ce jour";
+    }
 
   })
   .catch(err => {
