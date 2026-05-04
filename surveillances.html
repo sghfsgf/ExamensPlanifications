@@ -223,6 +223,19 @@ function verifierEtAfficher(){
 
   // validation email
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if(!emailOk || !dep){
+    return;
+  }
+
+  clearTimeout(window._autoTimer);
+
+  window._autoTimer = setTimeout(() => {
+    afficherTableau(dep);
+    resultats.scrollIntoView({ behavior: "smooth" });
+  }, 300);
+
+} // ✅ FIN OBLIGATOIRE
 function afficherTableau(departement){
 
   console.log("appel afficherTableau:", departement);
@@ -353,9 +366,7 @@ progressBar.textContent = pct + "%";
     progressContainer.style.display = "none";
   });
 }
-  if(!emailOk || !dep){
-    return;
-  }
+ 
 
   // 🔥 évite appels multiples inutiles
   clearTimeout(window._autoTimer);
