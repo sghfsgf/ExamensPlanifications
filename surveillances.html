@@ -330,6 +330,14 @@ if(!depInfo){
 const total = depInfo.nbEnseignants || 1;
 
 let pct = Math.round((inscrits / total) * 100);
+    if(pct === 100){
+  messageDiv.style.color = "green";
+  messageDiv.textContent = "📊 Tableau des choix est complet";
+}
+else{
+  messageDiv.style.color = "orange";
+  messageDiv.textContent = "Jour plein, veuillez choisir autre date et merci";
+}
 
 if(pct > 100) pct = 100;
 
