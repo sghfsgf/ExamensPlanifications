@@ -192,6 +192,12 @@ form.addEventListener('submit', e => {
 
       // 🔻 Scroll vers résultats
       resultats.scrollIntoView({ behavior: "smooth" });
+      messageDiv.style.color = "white";
+messageDiv.style.background = "#4CAF50";
+messageDiv.style.padding = "10px";
+messageDiv.style.borderRadius = "5px";
+
+messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
 
     }
 
