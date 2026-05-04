@@ -181,25 +181,31 @@ form.addEventListener('submit', e => {
     messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
     messageDiv.textContent = data.message;
 
-    if(data.status === 'success'){
+   if(data.status === 'success'){
 
-      // ⚠️ reset intelligent (garde département)
-      document.getElementById('nomPrenom').value = "";
-      document.getElementById('email').value = "";
-      jourSelect.value = "";
+  // ⚠️ reset intelligent (garde département)
+  document.getElementById('nomPrenom').value = "";
+  document.getElementById('email').value = "";
+  jourSelect.value = "";
 
-      afficherTableau(depChoisi);
+  afficherTableau(depChoisi);
 
-      // 🔻 Scroll vers résultats
-      resultats.scrollIntoView({ behavior: "smooth" });
-      messageDiv.style.color = "white";
-messageDiv.style.background = "#4CAF50";
-messageDiv.style.padding = "10px";
-messageDiv.style.borderRadius = "5px";
+  // 🔻 Scroll vers résultats
+  resultats.scrollIntoView({ behavior: "smooth" });
 
-messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+  // ⏳ petit délai pour meilleure UX
+  setTimeout(() => {
 
-    }
+    messageDiv.style.color = "white";
+    messageDiv.style.background = "#4CAF50";
+    messageDiv.style.padding = "10px";
+    messageDiv.style.borderRadius = "5px";
+
+    messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+
+  }, 300);
+
+}
 
   })
   .catch(() => {
