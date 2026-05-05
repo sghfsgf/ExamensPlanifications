@@ -7,7 +7,10 @@
   <title>Dépôts</title>
   <style>
     body { font-family: Arial; margin:0; background:#f0f4f8; }
-
+.active-page {
+  color: darkorange !important;
+  text-shadow: 0px 0px 5px rgba(255,140,0,0.5);
+}
     /* Barre de navigation */
     nav { background-color:#5F9EA0; padding:10px 20px; display:flex; gap:15px; }
     nav a { color:white; text-decoration:none; font-weight:bold; font-size:26px; }
@@ -155,6 +158,14 @@
         .catch(err => console.log('Erreur Service Worker :', err));
     }
   </script>
+<script>
+const page = window.location.pathname.split("/").pop();
 
+document.querySelectorAll("nav ul li a").forEach(link => {
+  if (link.getAttribute("href") === page) {
+    link.classList.add("active-page");
+  }
+});
+</script>
 </body>
 </html>
