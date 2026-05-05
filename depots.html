@@ -159,12 +159,16 @@
     }
   </script>
 <script>
-const page = window.location.pathname.split("/").pop();
+const page = window.location.pathname.split("/").pop().toLowerCase();
 
 document.querySelectorAll("nav ul li a").forEach(link => {
-  if (link.getAttribute("href") === page) {
+
+  const linkPage = link.getAttribute("href").split("/").pop().toLowerCase();
+
+  if (linkPage === page || (page === "" && linkPage === "index.html")) {
     link.classList.add("active-page");
   }
+
 });
 </script>
 </body>
