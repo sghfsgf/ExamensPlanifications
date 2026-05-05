@@ -50,7 +50,7 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 
 <h1>Session Principale mai 2026: Inscription à la surveillance (y compris les vacataires)</h1>
 
-<<form id="formSurveillance">
+<form id="formSurveillance">
 
   <label for="email">Email du chef de département</label>
   <input type="email" id="email" required>
@@ -297,8 +297,18 @@ if(pct > 100) pct = 100;
 progressBar.style.width = pct + "%";
 progressBar.textContent = pct + "%";
 
-restantDiv.textContent = "Restant : " + (total - inscrits);
+// 🎨 COULEUR SELON LE POURCENTAGE
+if(pct < 50){
+  progressBar.style.background = "#f44336"; // rouge
+}
+else if(pct < 80){
+  progressBar.style.background = "#ff9800"; // orange
+}
+else{
+  progressBar.style.background = "#4CAF50"; // vert
+}
 
+restantDiv.textContent = "Restant : " + (total - inscrits);
 })
 .catch(() => {
 messageDiv.textContent = "Erreur serveur";
