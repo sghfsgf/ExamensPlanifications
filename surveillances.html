@@ -50,37 +50,37 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 
 <h1>Session Principale mai 2026: Inscription à la surveillance (y compris les vacataires)</h1>
 
-<form id="formSurveillance">
+<<form id="formSurveillance">
 
-<label for="nomPrenom">
-Nom et Prenom: Prière de remplir en arabe
-</label>
+  <label for="email">Email du chef de département</label>
+  <input type="email" id="email" required>
 
-<input type="text"
-id="nomPrenom"
-required
-pattern="[\u0600-\u06FF\s]+"
-title="Veuillez écrire uniquement en arabe"
-oninput="verifierArabe()">
+  <label for="departement">Département</label>
+  <select id="departement" required>
+    <option value="">Chargement...</option>
+  </select>
 
-<p id="erreurNom" style="color:red; font-size:14px;"></p>
+  <label for="nomPrenom">
+    Nom et Prenom: Prière de remplir en arabe
+  </label>
 
-<label>Email du chef de département</label>
-<input type="email" id="email" required>
+  <input type="text"
+         id="nomPrenom"
+         required
+         pattern="[\u0600-\u06FF\s]+"
+         title="Veuillez écrire uniquement en arabe"
+         oninput="verifierArabe()">
 
-<label>Département</label>
-<select id="departement" required>
-<option value="">Chargement...</option>
-</select>
+  <p id="erreurNom" style="color:red; font-size:14px;"></p>
 
-<label>Jour</label>
-<select id="jour" required style="width:300px;">
-<option value="">Chargement...</option>
-</select>
+  <label for="jour">Jour</label>
+  <select id="jour" required style="width:300px;">
+    <option value="">Chargement...</option>
+  </select>
 
-<button type="submit">Envoyer</button>
+  <button type="submit">Envoyer</button>
 
-<div id="message"></div>
+  <div id="message"></div>
 
 </form>
 
