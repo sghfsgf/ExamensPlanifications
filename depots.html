@@ -159,15 +159,19 @@
     }
   </script>
 <script>
-const page = window.location.pathname.split("/").pop().toLowerCase();
+window.addEventListener("DOMContentLoaded", () => {
 
-document.querySelectorAll("nav a").forEach(link => {
+  const page = window.location.pathname.split("/").pop();
 
-  const linkPage = link.getAttribute("href").split("/").pop().toLowerCase();
+  document.querySelectorAll("nav a").forEach(link => {
 
-  if (linkPage === page || (page === "" && linkPage === "index.html")) {
-    link.classList.add("active-page");
-  }
+    const href = link.getAttribute("href");
+
+    if (href === page || (page === "" && href === "index.html")) {
+      link.classList.add("active-page");
+    }
+
+  });
 
 });
 </script>
