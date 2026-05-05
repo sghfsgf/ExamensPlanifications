@@ -1,206 +1,356 @@
-```html
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Surveillances - SGH Planification</title>
+<meta charset="UTF-8">
+<title>Surveillances - SGH Planification</title>
 
-  <style>
-    body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
-    nav { background:#5F9EA0; padding:10px; }
-    nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
-    nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
-    main { padding:20px; }
-    h1, .titre-tableau, .titre-progression { font-size:18px; font-weight:bold; margin-bottom:15px; }
+<style>
+body { font-family: Arial; margin:0; padding:0; background:#f4f4f4; }
+nav { background:#5F9EA0; padding:10px; }
+nav ul { list-style:none; display:flex; gap:20px; margin:0; padding:0; }
+nav ul li a { color:white; font-weight:bold; text-decoration:none; font-size:26px; }
+main { padding:20px; }
+h1, .titre-tableau, .titre-progression { font-size:18px; font-weight:bold; margin-bottom:15px; }
 
-    label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
-    input, select { padding:5px; width:300px; margin-top:5px; font-size:16px; }
-    button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
-    button:hover { background:#5a6b7a; }
-    #message { margin-top:15px; font-weight:bold; font-size:14px; }
+label { display:block; margin-top:10px; font-weight:bold; font-size:16px; }
+input, select { padding:5px; width:300px; margin-top:5px; font-size:16px; }
+button { margin-top:15px; padding:8px 15px; background:#778899; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; border-radius:4px; }
+button:hover { background:#5a6b7a; }
+#message { margin-top:15px; font-weight:bold; font-size:14px; }
 
-    #progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; padding:10px; border-radius:4px; }
-    #progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; border-radius:4px; }
-    #restant { margin-top:5px; font-weight:bold; }
+/* Barre de progression */
+#progressContainer { width:100%; background:#ddd; margin-top:10px; display:none; padding:10px; border-radius:4px; }
+#progressBar { width:0%; height:25px; text-align:center; color:white; line-height:25px; font-weight:bold; transition: width 0.5s ease, background-color 0.5s ease; border-radius:4px; }
+#restant { margin-top:5px; font-weight:bold; }
 
-    table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
-    table, th, td { border:1px solid #888; }
-    th, td { padding:8px; text-align:left; }
+table { width:100%; border-collapse: collapse; margin-top:10px; display:none; }
+table, th, td { border:1px solid #888; }
+th, td { padding:8px; text-align:left; }
 
-    footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
-  </style>
+#exportBtn { background:#4CAF50; margin-top:10px; }
+#exportBtn:hover { background:#45a049; }
+
+footer { background:#FF8C00; color:white; text-align:center; padding:15px; margin-top:30px; font-weight:bold; }
+</style>
+
 </head>
-
 <body>
 
 <nav>
-  <ul>
-    <li><a href="index.html">Accueil</a></li>
-    <li><a href="examens.html">Examens</a></li>
-    <li><a href="surveillances.html">Surveillances</a></li>
-    <li><a href="depots.html">Dépôts</a></li>
-    <li><a href="reclamations.html">Réclamations</a></li>
-  </ul>
+<ul>
+<li><a href="index.html">Accueil</a></li>
+<li><a href="examens.html">Examens</a></li>
+<li><a href="surveillances.html">Surveillances</a></li>
+<li><a href="depots.html">Dépôts</a></li>
+<li><a href="reclamations.html">Réclamations</a></li>
+</ul>
 </nav>
 
 <main>
 
-<h1>Session Principale mai 2026: Inscription à la surveillance</h1>
+<h1>Session Principale mai 2026: Inscription à la surveillance (y compris les vacataires)</h1>
 
 <form id="formSurveillance">
 
-  <label>Nom et Prenom (arabe)</label>
-  <input type="text" id="nomPrenom" required pattern="[\u0600-\u06FF\s]+" oninput="verifierArabe()">
-  <p id="erreurNom" style="color:red;"></p>
+<label for="nomPrenom">
+Nom et Prenom: Prière de remplir en arabe
+</label>
 
-  <label>Email</label>
-  <input type="email" id="email" required>
+<input type="text"
+id="nomPrenom"
+required
+pattern="[\u0600-\u06FF\s]+"
+title="Veuillez écrire uniquement en arabe"
+oninput="verifierArabe()">
 
-  <label>Département</label>
-  <select id="departement">
-    <option>Chargement...</option>
-  </select>
+<p id="erreurNom" style="color:red; font-size:14px;"></p>
 
-  <label>Jour</label>
-  <select id="jour">
-    <option>Chargement...</option>
-  </select>
+<label>Email du chef de département</label>
+<input type="email" id="email" required>
 
-  <button type="submit">Envoyer</button>
+<label>Département</label>
+<select id="departement" required>
+<option value="">Chargement...</option>
+</select>
 
-  <div id="message"></div>
+<label>Jour</label>
+<select id="jour" required style="width:300px;">
+<option value="">Chargement...</option>
+</select>
+
+<button type="submit">Envoyer</button>
+
+<div id="message"></div>
 
 </form>
 
-<div id="resultats">
+<!-- 🔻 RESULTATS EN BAS -->
+<div id="resultats" style="margin-top:40px;">
 
-  <div id="progressContainer">
-    <div id="progressBar">0%</div>
-    <div id="restant"></div>
-  </div>
+<div id="progressContainer">
+<h1 class="titre-progression">Progression du département</h1>
+<div id="progressBar">0%</div>
+<div id="restant"></div>
+</div>
 
-  <table id="tableDep">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Nom</th>
-        <th>Département</th>
-        <th>Jour</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="tableDep">
+<thead>
+<tr>
+<th>Date</th>
+<th>Nom</th>
+<th>Département</th>
+<th>Jour</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<button id="exportPDFBtn" style="background:red; color:white;">
+Exporter PDF
+</button>
 
 </div>
 
 </main>
 
-<footer>SGH 2026</footer>
+<footer>
+&copy; 2026 SGH pour Planification et Programmation
+</footer>
 
 <script>
 
-const SCRIPT_URL = "TON_URL";
-
-const depSelect = document.getElementById('departement');
-const jourSelect = document.getElementById('jour');
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
-const table = document.getElementById('tableDep');
-const tbody = table.querySelector('tbody');
-
-const progressBar = document.getElementById('progressBar');
+const depSelect = document.getElementById('departement');
+const jourSelect = document.getElementById('jour');
+const emailInput = document.getElementById('email');
 const progressContainer = document.getElementById('progressContainer');
+const progressBar = document.getElementById('progressBar');
 const restantDiv = document.getElementById('restant');
 
-// 🔹 Charger données
+const tableDep = document.getElementById('tableDep');
+const tbody = tableDep.querySelector('tbody');
+
+const resultats = document.getElementById('resultats');
+
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec';
+
+// 🔹 Charger données initiales
 fetch(SCRIPT_URL)
 .then(res => res.json())
 .then(data => {
 
-  depSelect.innerHTML = '<option value="">--Choisir--</option>';
-  (data.departements || []).forEach(d => {
-    depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
-  });
+depSelect.innerHTML = '<option value="">--Choisir--</option>';
+data.departements.forEach(d => {
+depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
+});
 
-  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-  (data.jours || []).forEach(j => {
-    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
-  });
+jourSelect.innerHTML = '<option value="">--Choisir--</option>';
+data.jours.forEach(j => {
+jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
+});
 
 });
+
+// 🔥 PARTIE 3 ICI
+emailInput.addEventListener('blur', verifierEtAfficher);
+depSelect.addEventListener('change', verifierEtAfficher);
 
 // 🔹 Envoi formulaire
 form.addEventListener('submit', e => {
-  e.preventDefault();
+e.preventDefault();
 
-  const formData = new FormData();
-  formData.append("nomPrenom", document.getElementById('nomPrenom').value);
-  formData.append("email", document.getElementById('email').value);
-  formData.append("departement", depSelect.value);
-  formData.append("jour", jourSelect.value);
+if(!depSelect.value || !jourSelect.value){
+messageDiv.textContent = "Veuillez remplir tous les champs";
+messageDiv.style.color = "red";
+return;
+}
 
-  fetch(SCRIPT_URL, { method:'POST', body:formData })
-  .then(res => res.json())
-  .then(data => {
+messageDiv.textContent = "Envoi en cours...";
+messageDiv.style.color = "black";
 
-    messageDiv.textContent = data.message;
+const depChoisi = depSelect.value;
 
-    if(data.status === "success"){
-      afficherTableau(depSelect.value);
-    }
+const formData = new FormData();
+formData.append('formType','surveillance');
+formData.append('nomPrenom', document.getElementById('nomPrenom').value);
+formData.append('email', document.getElementById('email').value);
+formData.append('departement', depChoisi);
+formData.append('jour', jourSelect.value);
 
-  });
+fetch(SCRIPT_URL, { method:'POST', body: formData })
+.then(res => res.json())
+.then(data => {
+
+messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
+messageDiv.textContent = data.message;
+
+if(data.status === 'success'){
+
+document.getElementById('nomPrenom').value = "";
+document.getElementById('email').value = "";
+jourSelect.value = "";
+
+afficherTableau(depChoisi);
+
+resultats.scrollIntoView({ behavior: "smooth" });
+
+setTimeout(() => {
+
+messageDiv.style.color = "white";
+messageDiv.style.background = "#4CAF50";
+messageDiv.style.padding = "10px";
+messageDiv.style.borderRadius = "5px";
+
+messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+
+}, 300);
+
+}
+
+})
+.catch(() => {
+messageDiv.textContent = "Erreur serveur";
+messageDiv.style.color = "red";
+});
 
 });
 
-// 🔹 Tableau
-function afficherTableau(dep){
+function verifierEtAfficher(){
 
-  fetch(SCRIPT_URL + "?departement=" + dep)
-  .then(res => res.json())
-  .then(data => {
+const email = emailInput.value.trim();
+const dep = depSelect.value;
 
-    tbody.innerHTML = "";
+const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    (data.surveillances || []).forEach(s => {
-      tbody.innerHTML += `
-        <tr>
-          <td>${new Date(s.date).toLocaleString()}</td>
-          <td>${s.nom}</td>
-          <td>${s.departement}</td>
-          <td>${s.jour}</td>
-        </tr>`;
-    });
+if(!emailOk || !dep){
+return;
+}
 
-    table.style.display = "table";
+clearTimeout(window._autoTimer);
 
-    const total = 10;
-    const inscrits = data.surveillances.length;
-    const pct = Math.round((inscrits / total) * 100);
+window._autoTimer = setTimeout(() => {
+afficherTableau(dep);
+resultats.scrollIntoView({ behavior: "smooth" });
+}, 300);
+}
 
-    progressBar.style.width = pct + "%";
-    progressBar.textContent = pct + "%";
+// 🔹 Affichage tableau
+function afficherTableau(departement){
 
-    restantDiv.textContent = "Restant : " + (total - inscrits);
+if(!departement) return;
 
-    progressContainer.style.display = "block";
+const email = emailInput.value.trim();
 
-  });
+messageDiv.textContent = "";
+
+if(!email){
+messageDiv.textContent = "Veuillez saisir l'email du chef";
+messageDiv.style.color = "red";
+return;
+}
+
+progressContainer.style.display = "block";
+tableDep.style.display = "table";
+
+fetch(SCRIPT_URL
++ '?departement=' + encodeURIComponent(departement)
++ '&email=' + encodeURIComponent(email)
+)
+.then(res => res.json())
+.then(data => {
+
+tbody.innerHTML = "";
+
+if(!data.surveillances || data.surveillances.length === 0){
+tbody.innerHTML = "<tr><td colspan='4'>Aucun choix n'est disponible</td></tr>";
+return;
+}
+
+let html = "";
+
+data.surveillances.forEach(s => {
+html += `
+<tr>
+<td>${new Date(s.date).toLocaleString()}</td>
+<td>${s.nom}</td>
+<td>${s.departement}</td>
+<td>${s.jour}</td>
+</tr>`;
+});
+
+tbody.innerHTML = html;
+
+const inscrits = data.surveillances.length;
+
+const depInfo = (data.departements || []).find(d =>
+(d.nom || "").trim().toLowerCase() === departement.trim().toLowerCase()
+);
+
+if(!depInfo) return;
+
+const total = depInfo.nbEnseignants || 1;
+
+let pct = Math.round((inscrits / total) * 100);
+if(pct > 100) pct = 100;
+
+progressBar.style.width = pct + "%";
+progressBar.textContent = pct + "%";
+
+restantDiv.textContent = "Restant : " + (total - inscrits);
+
+})
+.catch(() => {
+messageDiv.textContent = "Erreur serveur";
+messageDiv.style.color = "red";
+});
 
 }
 
 // 🔹 Validation arabe
-function verifierArabe(){
-  const input = document.getElementById("nomPrenom");
-  const erreur = document.getElementById("erreurNom");
+function verifierArabe() {
+const input = document.getElementById("nomPrenom");
+const erreur = document.getElementById("erreurNom");
 
-  const regex = /^[\u0600-\u06FF\s]+$/;
+const regex = /^[\u0600-\u06FF\s]+$/;
 
-  erreur.textContent = regex.test(input.value) ? "" : "⚠️ arabe uniquement";
+if (!regex.test(input.value)) {
+erreur.textContent = "⚠️ Veuillez écrire en arabe uniquement";
+} else {
+erreur.textContent = "";
 }
+}
+
+// 🔹 Export PDF
+const exportPDFBtn = document.getElementById("exportPDFBtn");
+
+exportPDFBtn.onclick = function(){
+
+const dep = depSelect.value;
+
+if(!dep){
+alert("Choisir un département");
+return;
+}
+
+fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
+.then(res => res.json())
+.then(data => {
+
+if(data.status === "success"){
+window.open(data.url, "_blank");
+} else {
+alert("Erreur PDF");
+}
+
+})
+.catch(() => {
+alert("Erreur serveur PDF");
+});
+
+};
 
 </script>
 
 </body>
 </html>
-```
