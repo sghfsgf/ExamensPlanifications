@@ -366,7 +366,7 @@ fetch(
 if(data.status === "success"){
 window.open(data.url, "_blank");
 } else {
-alert("Erreur PDF");
+alert(data.message || "Erreur PDF");
 }
 
 })
