@@ -354,7 +354,12 @@ alert("Choisir un département");
 return;
 }
 
-fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
+fetch(
+  SCRIPT_URL
+  + "?export=pdf"
+  + "&departement=" + encodeURIComponent(dep)
+  + "&email=" + encodeURIComponent(emailInput.value.trim())
+)
 .then(res => res.json())
 .then(data => {
 
