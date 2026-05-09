@@ -128,7 +128,7 @@ footer{
   </ul>
 </nav>
 
-<!-- ===== CONTENT ===== -->
+<!-- ===== CONTENU ===== -->
 <div class="container">
 
 <h1>Génération des Convocations</h1>
@@ -136,15 +136,15 @@ footer{
 <label>Département</label>
 <select id="dep">
   <option value="">Choisir département</option>
-  <option value="Informatique">Informatique</option>
-  <option value="Maths">Maths</option>
 </select>
 
-<label>Nom enseignant</label>
-<input id="nom" placeholder="Nom ou partie du nom">
+<label>Enseignant</label>
+<select id="enseignant">
+  <option value="">Choisir enseignant</option>
+</select>
 
 <label>Date</label>
-<input id="date" placeholder="ex: 18/05/2026">
+<input id="date" type="text" placeholder="ex: 18/05/2026">
 
 <button onclick="generer()">Générer Convocation PDF</button>
 
@@ -159,25 +159,72 @@ footer{
 </footer>
 
 <!-- ===== SCRIPT ===== -->
-
 <script>
-
-/* =========================
-   🔥 WEB APP (TON LIEN)
-========================= */
 
 const WEBAPP =
 "https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
 
 
-/* =========================
-   GENERER CONVOCATION
-========================= */
+// ===================== CHARGER DEPARTEMENTS =====================
+fetch(WEBAPP)
+.then(res => res.json())
+.then(data => {
 
+  let selectDep = document.getElementById("dep");
+
+  data.departements.forEach(dep => {
+
+    selectDep.innerHTML += `<option value="${dep.nom}">${dep.nom}</option>`;
+
+  });
+
+})
+.catch(err => {
+  console.log("Erreur chargement départements", err);
+});
+
+
+// ===================== CHARGER ENSEIGNANTS =====================
+document.getElementById("dep")
+.addEventListener("change", function(){
+
+  let dep = this.value;
+  let selectEns = document.getElementById("enseignant");
+
+  selectEns.innerHTML = "<option>Chargement...</option>";
+
+  if(dep === ""){
+    selectEns.innerHTML = "<option>Choisir enseignant</option>";
+    return;
+  }
+
+  fetch(WEBAPP + "?action=enseignants&dep=" + encodeURIComponent(dep))
+
+  .then(res => res.json())
+  .then(data => {
+
+    selectEns.innerHTML = "<option value=''>Choisir enseignant</option>";
+
+    data.enseignants.forEach(nom => {
+
+      selectEns.innerHTML += `<option value="${nom}">${nom}</option>`;
+
+    });
+
+  })
+  .catch(err => {
+    selectEns.innerHTML = "<option>Erreur chargement</option>";
+    console.log(err);
+  });
+
+});
+
+
+// ===================== GENERER CONVOCATION =====================
 function generer(){
 
   let dep = document.getElementById("dep").value;
-  let nom = document.getElementById("nom").value;
+  let nom = document.getElementById("enseignant").value;
   let date = document.getElementById("date").value;
 
   if(dep === "" || nom === "" || date === ""){
@@ -197,7 +244,6 @@ function generer(){
   )
 
   .then(r => r.json())
-
   .then(data => {
 
     document.getElementById("loading").style.display = "none";
@@ -206,7 +252,7 @@ function generer(){
 
       document.getElementById("resultat").innerHTML =
       `<a target="_blank" href="${data.url}">
-        📄 Télécharger la Convocation
+        📄 Télécharger la Convocation PDF
       </a>`;
 
     } else {
@@ -214,11 +260,11 @@ function generer(){
     }
 
   })
-
   .catch(err => {
 
     document.getElementById("loading").style.display = "none";
     alert("Erreur serveur");
+    console.log(err);
 
   });
 
