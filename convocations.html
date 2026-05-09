@@ -2,12 +2,8 @@
 <html lang="fr">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Convocations</title>
 
 <style>
@@ -19,8 +15,7 @@ body{
   padding:0;
 }
 
-/* ================= NAVBAR ================= */
-
+/* ===== NAV ===== */
 nav{
   background:#5F9EA0;
   padding:12px;
@@ -37,22 +32,18 @@ nav ul{
 nav ul li a{
   color:white;
   text-decoration:none;
-  font-size:20px;
+  font-size:18px;
   font-weight:bold;
 }
 
-/* ================= CONTENU ================= */
-
+/* ===== CONTAINER ===== */
 .container{
-
   max-width:600px;
   margin:40px auto;
   background:white;
   padding:25px;
   border-radius:10px;
-
-  box-shadow:
-  0 0 10px rgba(0,0,0,0.15);
+  box-shadow:0 0 10px rgba(0,0,0,0.15);
 }
 
 h1{
@@ -66,9 +57,7 @@ label{
   margin-top:15px;
 }
 
-select,
-button{
-
+select, button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -78,7 +67,6 @@ button{
 }
 
 button{
-
   background:#0b7dda;
   color:white;
   border:none;
@@ -94,7 +82,6 @@ button:hover{
   display:none;
   text-align:center;
   margin-top:15px;
-  color:#444;
   font-weight:bold;
 }
 
@@ -104,7 +91,6 @@ button:hover{
 }
 
 #resultat a{
-
   background:#28a745;
   color:white;
   padding:12px 18px;
@@ -114,14 +100,8 @@ button:hover{
   font-weight:bold;
 }
 
-#resultat a:hover{
-  background:#1f7e34;
-}
-
-/* ================= FOOTER ================= */
-
+/* ===== FOOTER ===== */
 footer{
-
   margin-top:40px;
   background:#FF8C00;
   color:white;
@@ -136,305 +116,109 @@ footer{
 
 <body>
 
-<!-- ===== Barre de navigation ===== -->
+<!-- ===== NAV ===== -->
 <nav>
   <ul>
     <li><a href="index.html">Accueil</a></li>
     <li><a href="examens.html">Examens</a></li>
     <li><a href="surveillances.html">Surveillances</a></li>
-     <li><a href="convocations.html">Convocations</a></li>
+    <li><a href="convocations.html">Convocations</a></li>
     <li><a href="depots.html">Dépôts</a></li>
     <li><a href="reclamations.html">Réclamations</a></li>
   </ul>
 </nav>
 
-<!-- ================= CONTENU ================= -->
-
+<!-- ===== CONTENT ===== -->
 <div class="container">
 
-<h1>
-Génération des Convocations
-</h1>
+<h1>Génération des Convocations</h1>
 
-<p>
-
-Choisir le département puis
-l’enseignant afin de générer
-la convocation officielle PDF.
-
-</p>
-
-<!-- ================= DEPARTEMENT ================= -->
-
-<label>
-Département
-</label>
-
-<select id="departement">
-
-<option value="">
-Choisir département
-</option>
-
+<label>Département</label>
+<select id="dep">
+  <option value="">Choisir département</option>
+  <option value="Informatique">Informatique</option>
+  <option value="Maths">Maths</option>
 </select>
 
-<!-- ================= ENSEIGNANT ================= -->
+<label>Nom enseignant</label>
+<input id="nom" placeholder="Nom ou partie du nom">
 
-<label>
-Enseignant
-</label>
+<label>Date</label>
+<input id="date" placeholder="ex: 18/05/2026">
 
-<select id="enseignant">
+<button onclick="generer()">Générer Convocation PDF</button>
 
-<option value="">
-Choisir enseignant
-</option>
-
-</select>
-
-<!-- ================= BOUTON ================= -->
-
-<button onclick="genererConvocation()">
-
-Générer Convocation PDF
-
-</button>
-
-<div id="loading">
-
-Génération du PDF en cours...
-
-</div>
-
+<div id="loading">⏳ Génération en cours...</div>
 <div id="resultat"></div>
 
 </div>
 
-<!-- ================= FOOTER ================= -->
-
+<!-- ===== FOOTER ===== -->
 <footer>
   &copy; 2026 SGH pour Planification et Programmation
 </footer>
-<!-- ================= SCRIPT ================= -->
+
+<!-- ===== SCRIPT ===== -->
 
 <script>
 
-/* =====================================
-   🔥 VOTRE WEB APP APPS SCRIPT
-===================================== */
+/* =========================
+   🔥 WEB APP (TON LIEN)
+========================= */
 
 const WEBAPP =
-"https://script.google.com/macros/s/VOTRE_ID_WEBAPP/exec";
+"https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
 
 
-/* =====================================
-   🔥 ID GOOGLE DOCS MODELE
-===================================== */
-
-const TEMPLATE_ID =
-"1tkL8mFaDuslSobrx513PyoRI1rFYmN8-HBpZsKsP908";
-
-
-/* =====================================
-   CHARGER DEPARTEMENTS
-===================================== */
-
-fetch(
-  WEBAPP + "?action=departements"
-)
-
-.then(r => r.json())
-
-.then(data => {
-
-  let selectDep =
-    document.getElementById(
-      "departement"
-    );
-
-  data.departements.forEach(dep => {
-
-    selectDep.innerHTML +=
-    `
-    <option value="${dep}">
-      ${dep}
-    </option>
-    `;
-
-  });
-
-})
-
-.catch(err => {
-
-  alert(
-    "Erreur chargement départements"
-  );
-
-});
-
-
-/* =====================================
-   CHARGER ENSEIGNANTS
-===================================== */
-
-document
-.getElementById("departement")
-
-.addEventListener("change", function(){
-
-  let dep = this.value;
-
-  let selectEns =
-    document.getElementById(
-      "enseignant"
-    );
-
-  selectEns.innerHTML =
-  `
-  <option value="">
-    Chargement...
-  </option>
-  `;
-
-  fetch(
-    WEBAPP +
-    "?action=enseignants&dep=" +
-    encodeURIComponent(dep)
-  )
-
-  .then(r => r.json())
-
-  .then(data => {
-
-    selectEns.innerHTML =
-    `
-    <option value="">
-      Choisir enseignant
-    </option>
-    `;
-
-    data.enseignants.forEach(nom => {
-
-      selectEns.innerHTML +=
-      `
-      <option value="${nom}">
-        ${nom}
-      </option>
-      `;
-
-    });
-
-  })
-
-  .catch(err => {
-
-    alert(
-      "Erreur chargement enseignants"
-    );
-
-  });
-
-});
-
-
-/* =====================================
+/* =========================
    GENERER CONVOCATION
-===================================== */
+========================= */
 
-function genererConvocation(){
+function generer(){
 
-  let dep =
-    document.getElementById(
-      "departement"
-    ).value;
+  let dep = document.getElementById("dep").value;
+  let nom = document.getElementById("nom").value;
+  let date = document.getElementById("date").value;
 
-  let nom =
-    document.getElementById(
-      "enseignant"
-    ).value;
-
-  if(dep === ""){
-
-    alert(
-      "Choisir un département"
-    );
-
+  if(dep === "" || nom === "" || date === ""){
+    alert("Remplir tous les champs");
     return;
   }
 
-  if(nom === ""){
-
-    alert(
-      "Choisir un enseignant"
-    );
-
-    return;
-  }
-
-  document
-  .getElementById("loading")
-  .style.display = "block";
-
-  document
-  .getElementById("resultat")
-  .innerHTML = "";
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("resultat").innerHTML = "";
 
   fetch(
-
     WEBAPP +
-
     "?action=convocation" +
-
-    "&dep=" +
-    encodeURIComponent(dep) +
-
-    "&nom=" +
-    encodeURIComponent(nom)
-
+    "&departement=" + encodeURIComponent(dep) +
+    "&nom=" + encodeURIComponent(nom) +
+    "&date=" + encodeURIComponent(date)
   )
 
   .then(r => r.json())
 
   .then(data => {
 
-    document
-    .getElementById("loading")
-    .style.display = "none";
+    document.getElementById("loading").style.display = "none";
 
     if(data.status === "success"){
 
-      document
-      .getElementById("resultat")
+      document.getElementById("resultat").innerHTML =
+      `<a target="_blank" href="${data.url}">
+        📄 Télécharger la Convocation
+      </a>`;
 
-      .innerHTML =
-
-      `
-      <a href="${data.url}"
-      target="_blank">
-
-      Télécharger la Convocation PDF
-
-      </a>
-      `;
-
-    }else{
-
+    } else {
       alert(data.message);
-
     }
 
   })
 
   .catch(err => {
 
-    document
-    .getElementById("loading")
-    .style.display = "none";
-
-    alert(
-      "Erreur serveur"
-    );
+    document.getElementById("loading").style.display = "none";
+    alert("Erreur serveur");
 
   });
 
