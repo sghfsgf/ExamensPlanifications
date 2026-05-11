@@ -225,9 +225,9 @@ function generer(){
 
   let dep = document.getElementById("dep").value;
   let nom = document.getElementById("enseignant").value;
-  let date = document.getElementById("date").value;
+  let jour = document.getElementById("jour").value;
 
-  if(dep === "" || nom === "" || date === ""){
+  if(dep === "" || nom === "" || jour === ""){
     alert("Remplir tous les champs");
     return;
   }
@@ -238,9 +238,9 @@ function generer(){
   fetch(
     WEBAPP +
     "?action=convocation" +
-    "&departement=" + encodeURIComponent(dep) +
+    "&dep=" + encodeURIComponent(dep) +
     "&nom=" + encodeURIComponent(nom) +
-    "&date=" + encodeURIComponent(date)
+    "&jour=" + encodeURIComponent(jour)
   )
 
   .then(r => r.json())
@@ -260,6 +260,7 @@ function generer(){
     }
 
   })
+
   .catch(err => {
 
     document.getElementById("loading").style.display = "none";
