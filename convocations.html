@@ -252,42 +252,19 @@ function generer(){
   }
 
   document.getElementById("loading").style.display = "block";
-  document.getElementById("resultat").innerHTML = "";
 
-  fetch(
+  let url =
     WEBAPP +
     "?action=convocation" +
     "&dep=" + encodeURIComponent(dep) +
     "&nom=" + encodeURIComponent(nom) +
-    "&jour=" + encodeURIComponent(jour)
-  )
+    "&date=" + encodeURIComponent(jour);
 
-  .then(r => r.json())
-  .then(data => {
-
+  // petit délai pour afficher loading
+  setTimeout(() => {
     document.getElementById("loading").style.display = "none";
-
-    if(data.status === "success"){
-
-      document.getElementById("resultat").innerHTML =
-      `<a target="_blank" href="${data.url}">
-        📄 Télécharger la Convocation PDF
-      </a>`;
-
-    } else {
-      alert(data.message);
-    }
-
-  })
-
-  .catch(err => {
-
-    document.getElementById("loading").style.display = "none";
-    alert("Erreur serveur");
-    console.log(err);
-
-  });
-
+    window.open(url, "_blank");
+  }, 500);
 }
 
 </script>
