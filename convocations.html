@@ -57,7 +57,7 @@ label{
   margin-top:15px;
 }
 
-select, button{
+select, input, button{
   width:100%;
   padding:12px;
   margin-top:8px;
@@ -143,8 +143,10 @@ footer{
   <option value="">Choisir enseignant</option>
 </select>
 
-<label>Date</label>
-<input id="date" type="text" placeholder="ex: 18/05/2026">
+<label>Jour</label>
+<select id="jour">
+  <option value="">Choisir jour</option>
+</select>
 
 <button onclick="generer()">Générer Convocation PDF</button>
 
@@ -164,6 +166,7 @@ footer{
 const WEBAPP =
 "https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
 
+let enseignantsData = {};
 
 // ===================== CHARGER DEPARTEMENTS =====================
 fetch(WEBAPP)
@@ -173,15 +176,11 @@ fetch(WEBAPP)
   let selectDep = document.getElementById("dep");
 
   data.departements.forEach(dep => {
-
     selectDep.innerHTML += `<option value="${dep.nom}">${dep.nom}</option>`;
-
   });
 
 })
-.catch(err => {
-  console.log("Erreur chargement départements", err);
-});
+.catch(err => console.log("Erreur départements", err));
 
 
 // ===================== CHARGER ENSEIGNANTS =====================
@@ -189,32 +188,52 @@ document.getElementById("dep")
 .addEventListener("change", function(){
 
   let dep = this.value;
-  let selectEns = document.getElementById("enseignant");
 
-  selectEns.innerHTML = "<option>Chargement...</option>";
+  document.getElementById("enseignant").innerHTML =
+    "<option>Chargement...</option>";
 
-  if(dep === ""){
-    selectEns.innerHTML = "<option>Choisir enseignant</option>";
-    return;
-  }
+  document.getElementById("jour").innerHTML =
+    "<option>Choisir jour</option>";
+
+  if(dep === "") return;
 
   fetch(WEBAPP + "?action=enseignants&dep=" + encodeURIComponent(dep))
 
   .then(res => res.json())
   .then(data => {
 
-    selectEns.innerHTML = "<option value=''>Choisir enseignant</option>";
+    enseignantsData = data.enseignants || {};
 
-    data.enseignants.forEach(nom => {
+    let ensSelect = document.getElementById("enseignant");
 
-      selectEns.innerHTML += `<option value="${nom}">${nom}</option>`;
+    ensSelect.innerHTML = "<option value=''>Choisir enseignant</option>";
 
-    });
+    for(let nom in enseignantsData){
+      ensSelect.innerHTML += `<option value="${nom}">${nom}</option>`;
+    }
 
   })
-  .catch(err => {
-    selectEns.innerHTML = "<option>Erreur chargement</option>";
-    console.log(err);
+  .catch(err => console.log(err));
+
+});
+
+
+// ===================== CHARGER JOURS =====================
+document.getElementById("enseignant")
+.addEventListener("change", function(){
+
+  let nom = this.value;
+
+  let jourSelect = document.getElementById("jour");
+
+  jourSelect.innerHTML = "<option>Chargement...</option>";
+
+  let jours = enseignantsData[nom] || [];
+
+  jourSelect.innerHTML = "<option value=''>Choisir jour</option>";
+
+  jours.forEach(j => {
+    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
   });
 
 });
