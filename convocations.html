@@ -253,18 +253,41 @@ function generer(){
 
   document.getElementById("loading").style.display = "block";
 
-  let url =
+  fetch(
     WEBAPP +
     "?action=convocation" +
     "&dep=" + encodeURIComponent(dep) +
     "&nom=" + encodeURIComponent(nom) +
-    "&date=" + encodeURIComponent(jour);
+    "&date=" + encodeURIComponent(jour)
+  )
+  .then(r => r.json())
+  .then(data => {
 
-  // petit délai pour afficher loading
-  setTimeout(() => {
     document.getElementById("loading").style.display = "none";
-    window.open(url, "_blank");
-  }, 500);
+
+    if(data.status === "success"){
+
+      const link = document.createElement("a");
+      link.href = "data:application/pdf;base64," + data.pdf;
+      link.download = data.filename;
+      link.click();
+
+      document.getElementById("resultat").innerHTML =
+        "✅ Convocation téléchargée";
+
+    } else {
+      alert(data.message);
+    }
+
+  })
+  .catch(err => {
+
+    document.getElementById("loading").style.display = "none";
+    alert("Erreur serveur");
+    console.log(err);
+
+  });
+
 }
 
 </script>
