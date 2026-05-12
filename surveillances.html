@@ -221,64 +221,36 @@ formData.append('jour', jourSelect.value);
 
 fetch(SCRIPT_URL, { method:'POST', body: formData })
 .then(res => res.json())
-.then(data => {
+  .then(data => {
 
-  // =========================
-  // 🔥 MESSAGE GLOBAL
-  // =========================
   messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
-  messageDiv.textContent = data.message || "";
+  messageDiv.textContent = data.message;
 
-  if (data.status === 'success') {
+  if(data.status === 'success'){
 
-    // =========================
-    // 🔹 CAS 1 : SURVEILLANCES
-    // =========================
-    if (!data.pdf) {
+    document.getElementById('nomPrenom').value = "";
+    document.getElementById('email').value = "";
+    jourSelect.value = "";
 
-      document.getElementById('nomPrenom').value = "";
-      document.getElementById('email').value = "";
-      jourSelect.value = "";
+    afficherTableau(depChoisi);
 
-      afficherTableau(depChoisi);
+    resultats.scrollIntoView({ behavior: "smooth" });
 
-      resultats.scrollIntoView({ behavior: "smooth" });
-
-      setTimeout(() => {
-
-        messageDiv.style.color = "white";
-        messageDiv.style.background = "#4CAF50";
-        messageDiv.style.padding = "10px";
-        messageDiv.style.borderRadius = "5px";
-
-        messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
-
-      }, 300);
-    }
-
-    // =========================
-    // 🔹 CAS 2 : EXPORT PDF
-    // =========================
-    if (data.pdf) {
-
-      const a = document.createElement("a");
-      a.href = "data:application/pdf;base64," + data.pdf;
-      a.download = data.filename || "export.pdf";
-
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+    setTimeout(() => {
 
       messageDiv.style.color = "white";
-      messageDiv.style.background = "#2196F3";
+      messageDiv.style.background = "#4CAF50";
       messageDiv.style.padding = "10px";
       messageDiv.style.borderRadius = "5px";
 
-      messageDiv.textContent = "📄 PDF téléchargé avec succès";
-    }
+      messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+
+    }, 300);
+
   }
 
 })
+)
 .catch(err => {
 
   messageDiv.style.color = "red";
