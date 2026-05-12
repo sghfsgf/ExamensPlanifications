@@ -361,7 +361,7 @@ fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
 if(data.status === "success"){
 window.open(data.url, "_blank");
 } else {
-alert("Erreur PDF");
+alert("Choisir le Département qui correspond bien à l'adresse saisi!");
 }
 
 })
