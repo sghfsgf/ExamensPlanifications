@@ -181,16 +181,25 @@ fetch(SCRIPT_URL)
 .then(res => res.json())
 .then(data => {
 
-depSelect.innerHTML = '<option value="">--Choisir--</option>';
-data.departements.forEach(d => {
-depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
-});
+  depSelect.innerHTML = '<option value="">--Choisir--</option>';
+  jourSelect.innerHTML = '<option value="">--Choisir--</option>';
 
-jourSelect.innerHTML = '<option value="">--Choisir--</option>';
-data.jours.forEach(j => {
-jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
-});
+  if (data.departements) {
+    data.departements.forEach(d => {
+      depSelect.innerHTML += `<option value="${d.nom}">${d.nom}</option>`;
+    });
+  }
 
+  if (data.jours) {
+    data.jours.forEach(j => {
+      jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
+    });
+  }
+
+})
+.catch(err => {
+  console.log("Erreur chargement:", err);
+  depSelect.innerHTML = '<option value="">Erreur chargement</option>';
 });
 
 // 🔥 PARTIE 3 ICI
@@ -226,7 +235,7 @@ fetch(SCRIPT_URL, { method:'POST', body: formData })
   messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
   messageDiv.textContent = data.message;
 
-  if(data.status === 'success'){
+  if(data.status === 'success') {
 
     document.getElementById('nomPrenom').value = "";
     document.getElementById('email').value = "";
@@ -237,25 +246,19 @@ fetch(SCRIPT_URL, { method:'POST', body: formData })
     resultats.scrollIntoView({ behavior: "smooth" });
 
     setTimeout(() => {
-
       messageDiv.style.color = "white";
       messageDiv.style.background = "#4CAF50";
       messageDiv.style.padding = "10px";
       messageDiv.style.borderRadius = "5px";
-
       messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
-
     }, 300);
-
   }
 
 })
 .catch(err => {
-
+  console.log(err);
   messageDiv.style.color = "red";
   messageDiv.textContent = "❌ Erreur serveur";
-
-  console.log(err);
 });
 
 function verifierEtAfficher(){
