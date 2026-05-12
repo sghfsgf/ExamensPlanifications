@@ -221,7 +221,7 @@ formData.append('jour', jourSelect.value);
 
 fetch(SCRIPT_URL, { method:'POST', body: formData })
 .then(res => res.json())
-  .then(data => {
+.then(data => {
 
   messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
   messageDiv.textContent = data.message;
@@ -250,19 +250,12 @@ fetch(SCRIPT_URL, { method:'POST', body: formData })
   }
 
 })
-)
 .catch(err => {
 
   messageDiv.style.color = "red";
   messageDiv.textContent = "❌ Erreur serveur";
 
   console.log(err);
-});)
-.catch(() => {
-messageDiv.textContent = "Erreur serveur";
-messageDiv.style.color = "red";
-});
-
 });
 
 function verifierEtAfficher(){
