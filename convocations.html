@@ -42,20 +42,21 @@ nav ul li a:hover {
   text-decoration:underline;
 }
 
+/* ===== CONTAINER ===== */
 .container{
   max-width:600px;
-  margin:40px 20px;
+ margin:40px 20px;
   background:white;
   padding:25px;
   border-radius:10px;
   box-shadow:0 0 10px rgba(0,0,0,0.15);
-  text-align:left;
+   text-align:left;
 }
 
 h1{
   text-align:center;
   color:#b85400;
-  font-size:22px;
+  font-size:22px; /* 🔽 plus petit */
 }
 
 label{
@@ -85,20 +86,6 @@ button:hover{
   background:#095ea8;
 }
 
-button:disabled{
-  background:gray;
-  cursor:not-allowed;
-}
-
-#timer{
-  margin-top:15px;
-  margin-bottom:15px;
-  text-align:center;
-  font-weight:bold;
-  color:#b85400;
-  font-size:18px;
-}
-
 #loading{
   display:none;
   text-align:center;
@@ -121,6 +108,7 @@ button:disabled{
   font-weight:bold;
 }
 
+/* ===== FOOTER ===== */
 footer{
   margin-top:40px;
   background:#FF8C00;
@@ -137,7 +125,6 @@ footer{
 <body>
 
 <!-- ===== NAV ===== -->
-
 <nav>
   <ul>
     <li><a href="index.html">Accueil</a></li>
@@ -150,7 +137,6 @@ footer{
 </nav>
 
 <!-- ===== CONTENU ===== -->
-
 <div class="container">
 
 <h1>Génération des Convocations</h1>
@@ -170,115 +156,45 @@ footer{
   <option value="">Choisir jour</option>
 </select>
 
-<div id="timer"></div>
+<button onclick="generer()">Générer Convocation PDF</button>
 
-<button id="btnPDF" onclick="verifierEtGenererPDF()">
-  Générer Convocation PDF
-</button>
-
-<div id="loading">
-  ⏳ Génération en cours...
-</div>
-
+<div id="loading">⏳ Génération en cours...</div>
 <div id="resultat"></div>
 
-<hr>
+  <hr>
 
 </div>
 
 <!-- ===== FOOTER ===== -->
-
 <footer>
   &copy; 2026 SGH pour Planification et Programmation
 </footer>
 
 <!-- ===== SCRIPT ===== -->
-
 <script>
-
-let debutPage = Date.now();
-
-setInterval(function(){
-
-   let maintenant = Date.now();
-
-   let reste =
-     300 - Math.floor((maintenant - debutPage)/1000);
-
-   if(reste < 0) reste = 0;
-
-   document.getElementById("timer").innerHTML =
-     "⏳ Temps restant : " +
-     Math.floor(reste/60) + ":" +
-     String(reste%60).padStart(2,'0');
-
-   if(reste <= 0){
-
-      document.getElementById("btnPDF").disabled = true;
-
-   }
-
-},1000);
-
-
-// ===================== VERIFICATION 5 MIN =====================
-
-function verifierEtGenererPDF(){
-
-    let maintenant = Date.now();
-
-    let diffMinutes =
-      (maintenant - debutPage) / 1000 / 60;
-
-    if(diffMinutes >= 5){
-
-        alert("Impossible d'avoir une convocation ici");
-
-        return;
-
-    }
-
-    generer();
-
-}
-
-
-// ===================== WEBAPP =====================
 
 const WEBAPP =
 "https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
 
 let enseignantsData = {};
 
-
 // ===================== CHARGER DEPARTEMENTS =====================
-
 fetch(WEBAPP)
-
 .then(res => res.json())
-
 .then(data => {
 
   let selectDep = document.getElementById("dep");
 
   data.departements.forEach(dep => {
-
-    selectDep.innerHTML +=
-      `<option value="${dep.nom}">
-        ${dep.nom}
-      </option>`;
-
+    selectDep.innerHTML += `<option value="${dep.nom}">${dep.nom}</option>`;
   });
 
 })
-
 .catch(err => console.log("Erreur départements", err));
 
 
 // ===================== CHARGER ENSEIGNANTS =====================
-
 document.getElementById("dep")
-
 .addEventListener("change", function(){
 
   let dep = this.value;
@@ -291,149 +207,93 @@ document.getElementById("dep")
 
   if(dep === "") return;
 
-  fetch(
-    WEBAPP +
-    "?action=enseignants&dep=" +
-    encodeURIComponent(dep)
-  )
+  fetch(WEBAPP + "?action=enseignants&dep=" + encodeURIComponent(dep))
 
   .then(res => res.json())
-
   .then(data => {
 
     enseignantsData = data.enseignants || {};
 
-    let ensSelect =
-      document.getElementById("enseignant");
+    let ensSelect = document.getElementById("enseignant");
 
-    ensSelect.innerHTML =
-      "<option value=''>Choisir enseignant</option>";
+    ensSelect.innerHTML = "<option value=''>Choisir enseignant</option>";
 
     for(let nom in enseignantsData){
-
-      ensSelect.innerHTML +=
-        `<option value="${nom}">
-          ${nom}
-        </option>`;
-
+      ensSelect.innerHTML += `<option value="${nom}">${nom}</option>`;
     }
 
   })
-
   .catch(err => console.log(err));
 
 });
 
 
 // ===================== CHARGER JOURS =====================
-
 document.getElementById("enseignant")
-
 .addEventListener("change", function(){
 
   let nom = this.value;
 
-  let jourSelect =
-    document.getElementById("jour");
+  let jourSelect = document.getElementById("jour");
 
-  jourSelect.innerHTML =
-    "<option>Chargement...</option>";
+  jourSelect.innerHTML = "<option>Chargement...</option>";
 
   let jours = enseignantsData[nom] || [];
 
-  jourSelect.innerHTML =
-    "<option value=''>Choisir jour</option>";
+  jourSelect.innerHTML = "<option value=''>Choisir jour</option>";
 
   jours.forEach(j => {
-
-    jourSelect.innerHTML +=
-      `<option value="${j}">
-        ${j}
-      </option>`;
-
+    jourSelect.innerHTML += `<option value="${j}">${j}</option>`;
   });
 
 });
 
 
 // ===================== GENERER CONVOCATION =====================
-
 function generer(){
 
-  let dep =
-    document.getElementById("dep").value;
-
-  let nom =
-    document.getElementById("enseignant").value;
-
-  let jour =
-    document.getElementById("jour").value;
+  let dep = document.getElementById("dep").value;
+  let nom = document.getElementById("enseignant").value;
+  let jour = document.getElementById("jour").value;
 
   if(dep === "" || nom === "" || jour === ""){
-
     alert("Remplir tous les champs");
-
     return;
   }
 
-  document.getElementById("loading")
-  .style.display = "block";
+  document.getElementById("loading").style.display = "block";
 
   fetch(
-
     WEBAPP +
-
     "?action=convocation" +
-
     "&dep=" + encodeURIComponent(dep) +
-
     "&nom=" + encodeURIComponent(nom) +
-
-    "&date=" + encodeURIComponent(jour) +
-
-    "&debutPage=" + debutPage
-
+    "&date=" + encodeURIComponent(jour)
   )
-
   .then(r => r.json())
-
   .then(data => {
 
-    document.getElementById("loading")
-    .style.display = "none";
+    document.getElementById("loading").style.display = "none";
 
     if(data.status === "success"){
 
-      const link =
-        document.createElement("a");
-
-      link.href =
-        "data:application/pdf;base64," +
-        data.pdf;
-
+      const link = document.createElement("a");
+      link.href = "data:application/pdf;base64," + data.pdf;
       link.download = data.filename;
-
       link.click();
 
-      document.getElementById("resultat")
-      .innerHTML =
+      document.getElementById("resultat").innerHTML =
         "✅ Convocation téléchargée";
 
     } else {
-
       alert(data.message);
-
     }
 
   })
-
   .catch(err => {
 
-    document.getElementById("loading")
-    .style.display = "none";
-
+    document.getElementById("loading").style.display = "none";
     alert("Erreur serveur");
-
     console.log(err);
 
   });
