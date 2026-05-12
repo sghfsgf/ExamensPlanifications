@@ -223,33 +223,69 @@ fetch(SCRIPT_URL, { method:'POST', body: formData })
 .then(res => res.json())
 .then(data => {
 
-messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
-messageDiv.textContent = data.message;
+  // =========================
+  // 🔥 MESSAGE GLOBAL
+  // =========================
+  messageDiv.style.color = data.status === 'success' ? 'green' : 'red';
+  messageDiv.textContent = data.message || "";
 
-if(data.status === 'success'){
+  if (data.status === 'success') {
 
-document.getElementById('nomPrenom').value = "";
-document.getElementById('email').value = "";
-jourSelect.value = "";
+    // =========================
+    // 🔹 CAS 1 : SURVEILLANCES
+    // =========================
+    if (!data.pdf) {
 
-afficherTableau(depChoisi);
+      document.getElementById('nomPrenom').value = "";
+      document.getElementById('email').value = "";
+      jourSelect.value = "";
 
-resultats.scrollIntoView({ behavior: "smooth" });
+      afficherTableau(depChoisi);
 
-setTimeout(() => {
+      resultats.scrollIntoView({ behavior: "smooth" });
 
-messageDiv.style.color = "white";
-messageDiv.style.background = "#4CAF50";
-messageDiv.style.padding = "10px";
-messageDiv.style.borderRadius = "5px";
+      setTimeout(() => {
 
-messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
+        messageDiv.style.color = "white";
+        messageDiv.style.background = "#4CAF50";
+        messageDiv.style.padding = "10px";
+        messageDiv.style.borderRadius = "5px";
 
-}, 300);
+        messageDiv.textContent = "✔ Votre choix du jour est bien réussi";
 
-}
+      }, 300);
+    }
+
+    // =========================
+    // 🔹 CAS 2 : EXPORT PDF
+    // =========================
+    if (data.pdf) {
+
+      const a = document.createElement("a");
+      a.href = "data:application/pdf;base64," + data.pdf;
+      a.download = data.filename || "export.pdf";
+
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      messageDiv.style.color = "white";
+      messageDiv.style.background = "#2196F3";
+      messageDiv.style.padding = "10px";
+      messageDiv.style.borderRadius = "5px";
+
+      messageDiv.textContent = "📄 PDF téléchargé avec succès";
+    }
+  }
 
 })
+.catch(err => {
+
+  messageDiv.style.color = "red";
+  messageDiv.textContent = "❌ Erreur serveur";
+
+  console.log(err);
+});)
 .catch(() => {
 messageDiv.textContent = "Erreur serveur";
 messageDiv.style.color = "red";
