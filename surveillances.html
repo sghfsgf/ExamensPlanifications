@@ -343,31 +343,49 @@ erreur.textContent = "";
 }
 }
 
-// 🔹 Export PDF
+// Mercredi 13/05/2026🔹 Export PDF
+
 const exportPDFBtn = document.getElementById("exportPDFBtn");
 
 exportPDFBtn.onclick = function(){
 
 const dep = depSelect.value;
+const email = emailInput.value.trim();
 
 if(!dep){
 alert("Choisir un département");
 return;
 }
 
-fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
+if(!email){
+alert("Saisir l'email du chef");
+return;
+}
+
+fetch(
+SCRIPT_URL
++ "?export=pdf"
++ "&departement=" + encodeURIComponent(dep)
++ "&email=" + encodeURIComponent(email)
+)
 .then(res => res.json())
 .then(data => {
 
 if(data.status === "success"){
+
 window.open(data.url, "_blank");
+
 } else {
-alert("Choisir le Département qui correspond bien à l'adresse saisi!");
+
+alert(data.message || "Accès refusé");
+
 }
 
 })
 .catch(() => {
+
 alert("Erreur serveur PDF");
+
 });
 
 };
