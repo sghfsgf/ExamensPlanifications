@@ -348,20 +348,31 @@ const exportPDFBtn = document.getElementById("exportPDFBtn");
 exportPDFBtn.onclick = function(){
 
 const dep = depSelect.value;
+const email = emailInput.value.trim();
 
 if(!dep){
 alert("Choisir un département");
 return;
 }
 
-fetch(SCRIPT_URL + "?export=pdf&departement=" + encodeURIComponent(dep))
+if(!email){
+alert("Saisir email chef département");
+return;
+}
+
+fetch(
+SCRIPT_URL
++ "?export=pdf"
++ "&departement=" + encodeURIComponent(dep)
++ "&email=" + encodeURIComponent(email)
+)
 .then(res => res.json())
 .then(data => {
 
 if(data.status === "success"){
 window.open(data.url, "_blank");
 } else {
-alert("Erreur PDF");
+alert(data.message || "Erreur PDF");
 }
 
 })
