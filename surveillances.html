@@ -130,7 +130,7 @@ Exporter PDF
 </footer>
 
 <script>
-
+document.addEventListener("DOMContentLoaded", function () {
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depSelect = document.getElementById('departement');
@@ -417,7 +417,7 @@ exportExcelBtn.onclick = function () {
   })
   .catch(() => alert("Erreur serveur Excel"));
 };
-
+});
 </script>
 
 </body>
