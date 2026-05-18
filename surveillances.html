@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
+</script>
 <meta charset="UTF-8">
 <title>Surveillances - SGH Planification</title>
 
@@ -65,10 +68,12 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 fetch(SCRIPT_URL + "?titre=1")
   .then(res => res.json())
   .then(data => {
-    document.getElementById("titrePage").innerText = data.titre;
+    document.getElementById("titrePage").innerText = data.titre || "Titre non défini";
+  })
+  .catch(err => {
+    console.log("Erreur titre:", err);
   });
 </script>
-
 
 <form id="formSurveillance">
 
