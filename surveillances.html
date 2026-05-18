@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyZg4xjXxVHMwezbmL3YgdBN-2vudMsaMQ_ScvSV5MsrJn5Mwk6HdRt_wROb2nFk-jc/exec";
-</script>
+  
 <meta charset="UTF-8">
 <title>Surveillances - SGH Planification</title>
 
@@ -52,7 +50,7 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 
 <main>
 
-<h1 id="titrePage" style="
+<h1 id="Session Principale mai 2026: la session principale est en cours" style="
   color:#b85400;
   font-weight:bold;
   font-size:22px;
@@ -64,16 +62,6 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 ">
 </h1>
 
-<script>
-fetch(SCRIPT_URL + "?titre=1")
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("titrePage").innerText = data.titre || "Titre non défini";
-  })
-  .catch(err => {
-    console.log("Erreur titre:", err);
-  });
-</script>
 
 <form id="formSurveillance">
 
