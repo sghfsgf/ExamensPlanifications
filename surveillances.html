@@ -120,7 +120,7 @@ footer { background:#FF8C00; color:white; text-align:center; padding:15px; margi
 <button id="exportPDFBtn" style="background:red; color:white;">
 Exporter PDF
 </button>
-<button id="exportExcelBtn">📊 Export Excel</button>
+
 </div>
 
 </main>
@@ -130,7 +130,7 @@ Exporter PDF
 </footer>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+
 const form = document.getElementById('formSurveillance');
 const messageDiv = document.getElementById('message');
 const depSelect = document.getElementById('departement');
@@ -382,42 +382,6 @@ exportPDFBtn.onclick = function(){
 
 };
 
-  const exportExcelBtn = document.getElementById("exportExcelBtn");
-
-exportExcelBtn.onclick = function () {
-
-  const dep = depSelect.value;
-  const email = emailInput.value.trim().toLowerCase();
-
-  if (!dep) {
-    alert("Choisir un département");
-    return;
-  }
-
-  if (!email) {
-    alert("Saisir email chef département");
-    return;
-  }
-
-  fetch(
-    SCRIPT_URL
-    + "?export=excel"
-    + "&departement=" + encodeURIComponent(dep)
-    + "&email=" + encodeURIComponent(email)
-  )
-  .then(res => res.json())
-  .then(data => {
-
-    if (data.status === "success") {
-      window.open(data.url, "_blank"); // ouvre Excel
-    } else {
-      alert(data.message || "Erreur export Excel");
-    }
-
-  })
-  .catch(() => alert("Erreur serveur Excel"));
-};
-});
 </script>
 
 </body>
